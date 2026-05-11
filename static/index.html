@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sim2Real — Interactive Operations Research Simulator with AI-powered explanations" />
+  <title>Sim2Real | Operations Research Simulator</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" defer></script>
+
+  <!-- App styles & scripts -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="/static/js/api.js"    defer></script>
+  <script src="/static/js/charts.js" defer></script>
+  <script src="/static/js/app.js"    defer></script>
+</head>
+<body>
+
+<!-- ════════════════════ HEADER ════════════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">Sim<span class="brand-accent">2</span>Real</span>
+      <span class="brand-tag">Operations Research</span>
+    </div>
+    <nav class="header-nav">
+      <a href="/api/docs" target="_blank" rel="noopener" class="nav-link">API Docs</a>
+      <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ════════════════════ HERO ════════════════════ -->
+<section class="hero">
+  <h1 class="hero-title">Model. Simulate. Decide.</h1>
+  <p class="hero-sub">
+    Exact analytical solutions + Monte Carlo simulation for queuing systems and
+    inventory models — with AI-generated business insights.
+  </p>
+</section>
+
+<!-- ════════════════════ MODEL TABS ════════════════════ -->
+<div class="tab-bar" role="tablist" aria-label="Model selector">
+  <button class="tab active" data-tab="queuing"    role="tab" aria-selected="true">Queuing</button>
+  <button class="tab"        data-tab="eoq"        role="tab">EOQ</button>
+  <button class="tab"        data-tab="newsvendor" role="tab">Newsvendor</button>
+  <button class="tab"        data-tab="simulation" role="tab">Monte Carlo</button>
+</div>
+
+<!-- ════════════════════ MAIN WORKSPACE ════════════════════ -->
+<main class="workspace">
+
+  <!-- ── QUEUING PANEL ─────────────────────────────────────── -->
+  <section id="panel-queuing" class="panel active" aria-label="Queuing models">
+    <div class="panel-layout">
+
+      <!-- Inputs -->
+      <aside class="input-card">
+        <h2 class="card-title">Parameters</h2>
+
+        <label class="field-label" for="q-model">Queue Model</label>
+        <select id="q-model" class="field-select">
+          <option value="MM1">M/M/1 — Single server, exponential</option>
+          <option value="MMC">M/M/c — Multi-server, exponential</option>
+          <option value="MD1">M/D/1 — Single server, deterministic</option>
+          <option value="MG1">M/G/1 — Single server, general</option>
+        </select>
+
+        <label class="field-label" for="q-lambda">Arrival Rate (λ) <span class="unit">customers / time unit</span></label>
+        <input id="q-lambda" type="number" class="field-input" value="4" min="0.01" max="10000" step="0.1" />
+
+        <label class="field-label" for="q-mu">Service Rate (μ) <span class="unit">per server / time unit</span></label>
+        <input id="q-mu" type="number" class="field-input" value="6" min="0.01" max="10000" step="0.1" />
+
+        <div id="q-c-group">
+          <label class="field-label" for="q-c">Number of Servers (c)</label>
+          <input id="q-c" type="number" class="field-input" value="1" min="1" max="100" step="1" />
+        </div>
+
+        <div id="q-csv-group" style="display:none">
+          <label class="field-label" for="q-csv">Service Cs² <span class="unit">squared coeff. of variation</span></label>
+          <input id="q-csv" type="number" class="field-input" value="1" min="0" max="100" step="0.1" />
+          <p class="field-hint">1 = exponential, 0 = deterministic, &gt;1 = high-variance</p>
+        </div>
+
+        <div class="utilization-preview" id="q-util-preview">
+          ρ = <span id="q-util-val">—</span>
+        </div>
+
+        <button id="btn-queuing" class="btn-primary">Run Analysis</button>
+      </aside>
+
+      <!-- Results -->
+      <div class="results-area" id="results-queuing" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon">⬡</span>
+          <p>Set parameters and click <strong>Run Analysis</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EOQ PANEL ─────────────────────────────────────────── -->
+  <section id="panel-eoq" class="panel" aria-label="EOQ model" hidden>
+    <div class="panel-layout">
+      <aside class="input-card">
+        <h2 class="card-title">Parameters</h2>
+
+        <label class="field-label" for="eoq-demand">Annual Demand (D) <span class="unit">units / year</span></label>
+        <input id="eoq-demand" type="number" class="field-input" value="10000" min="1" max="1000000" step="1" />
+
+        <label class="field-label" for="eoq-k">Ordering Cost (K) <span class="unit">$ / order</span></label>
+        <input id="eoq-k" type="number" class="field-input" value="200" min="0.01" max="1000000" step="1" />
+
+        <label class="field-label" for="eoq-c">Unit Cost (c) <span class="unit">$ / unit</span></label>
+        <input id="eoq-c" type="number" class="field-input" value="50" min="0.01" max="100000" step="0.01" />
+
+        <label class="field-label" for="eoq-i">Holding Rate (i) <span class="unit">fraction of unit cost / year</span></label>
+        <input id="eoq-i" type="number" class="field-input" value="0.25" min="0.001" max="1" step="0.01" />
+        <p class="field-hint">e.g. 0.25 = 25% annual holding cost</p>
+
+        <button id="btn-eoq" class="btn-primary">Run Analysis</button>
+      </aside>
+      <div class="results-area" id="results-eoq" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon">⬡</span>
+          <p>Set parameters and click <strong>Run Analysis</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NEWSVENDOR PANEL ───────────────────────────────────── -->
+  <section id="panel-newsvendor" class="panel" aria-label="Newsvendor model" hidden>
+    <div class="panel-layout">
+      <aside class="input-card">
+        <h2 class="card-title">Parameters</h2>
+
+        <label class="field-label" for="nv-price">Selling Price (p) <span class="unit">$ / unit</span></label>
+        <input id="nv-price" type="number" class="field-input" value="100" min="0.01" max="1000000" step="1" />
+
+        <label class="field-label" for="nv-cost">Unit Cost (c) <span class="unit">$ / unit</span></label>
+        <input id="nv-cost" type="number" class="field-input" value="60" min="0.01" max="1000000" step="1" />
+
+        <label class="field-label" for="nv-salvage">Salvage Value (s) <span class="unit">$ / unsold unit</span></label>
+        <input id="nv-salvage" type="number" class="field-input" value="20" min="0" max="1000000" step="1" />
+
+        <label class="field-label" for="nv-dist">Demand Distribution</label>
+        <select id="nv-dist" class="field-select">
+          <option value="normal">Normal</option>
+          <option value="poisson">Poisson</option>
+          <option value="uniform">Uniform</option>
+        </select>
+
+        <label class="field-label" for="nv-mean">Demand Mean (μ)</label>
+        <input id="nv-mean" type="number" class="field-input" value="500" min="1" max="1000000" step="1" />
+
+        <label class="field-label" for="nv-std">Demand Std Dev (σ)</label>
+        <input id="nv-std" type="number" class="field-input" value="100" min="1" max="1000000" step="1" />
+
+        <button id="btn-newsvendor" class="btn-primary">Run Analysis</button>
+      </aside>
+      <div class="results-area" id="results-newsvendor" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon">⬡</span>
+          <p>Set parameters and click <strong>Run Analysis</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SIMULATION PANEL ───────────────────────────────────── -->
+  <section id="panel-simulation" class="panel" aria-label="Monte Carlo simulation" hidden>
+    <div class="panel-layout">
+      <aside class="input-card">
+        <h2 class="card-title">Parameters</h2>
+
+        <label class="field-label" for="sim-model">Queue Model</label>
+        <select id="sim-model" class="field-select">
+          <option value="MM1">M/M/1</option>
+          <option value="MMC">M/M/c</option>
+          <option value="MD1">M/D/1</option>
+        </select>
+
+        <label class="field-label" for="sim-lambda">Arrival Rate (λ)</label>
+        <input id="sim-lambda" type="number" class="field-input" value="4" min="0.01" max="10000" step="0.1" />
+
+        <label class="field-label" for="sim-mu">Service Rate (μ)</label>
+        <input id="sim-mu" type="number" class="field-input" value="6" min="0.01" max="10000" step="0.1" />
+
+        <label class="field-label" for="sim-c">Servers (c)</label>
+        <input id="sim-c" type="number" class="field-input" value="1" min="1" max="50" step="1" />
+
+        <label class="field-label" for="sim-n">Customers per Run</label>
+        <input id="sim-n" type="number" class="field-input" value="5000" min="100" max="50000" step="100" />
+
+        <label class="field-label" for="sim-reps">Replications <span class="unit">for CI</span></label>
+        <input id="sim-reps" type="number" class="field-input" value="10" min="1" max="50" step="1" />
+
+        <label class="field-label" for="sim-seed">Random Seed <span class="unit">optional</span></label>
+        <input id="sim-seed" type="number" class="field-input" placeholder="leave blank for random" min="0" max="2147483647" />
+
+        <button id="btn-simulation" class="btn-primary">Run Simulation</button>
+      </aside>
+      <div class="results-area" id="results-simulation" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon">⬡</span>
+          <p>Set parameters and click <strong>Run Simulation</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════════ AI EXPLANATION PANEL ════════════════════ -->
+<section class="ai-panel" id="ai-panel" hidden aria-live="polite">
+  <div class="ai-inner">
+    <div class="ai-header">
+      <span class="ai-icon">⬡</span>
+      <span class="ai-title">AI Insight</span>
+      <span class="ai-model" id="ai-model-badge"></span>
+    </div>
+    <div class="ai-body" id="ai-body">Loading…</div>
+  </div>
+</section>
+
+<!-- ════════════════════ TOAST NOTIFICATION ════════════════════ -->
+<div id="toast" class="toast" aria-live="assertive" aria-atomic="true"></div>
+
+</body>
+</html>
