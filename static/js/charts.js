@@ -262,10 +262,141 @@ function renderWaitHistogram(canvas, bins, counts, analyticalWq) {
   });
 }
 
+/**
+ * Simple cost curve without annotation plugin (for EPQ, backorder curves).
+ * @param {HTMLCanvasElement} canvas
+ * @param {number[]} qVals
+ * @param {number[]} tc      - total cost
+ * @param {number}   qStar   - label only, no annotation plugin needed
+ * @param {string}   xLabel
+ */
+function renderSimpleCostCurve(canvas, qVals, tc, qStar, xLabel) {
+  destroyChart(canvas);
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: qVals.map(q => q.toFixed(0)),
+      datasets: [{
+        label: 'Total Cost',
+        data: tc,
+        borderColor: '#58a6ff',
+        backgroundColor: 'rgba(88,166,255,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `TC: $${ctx.raw.toFixed(2)}`,
+            title: ctx => `Q = ${ctx[0].label}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: { display: true, text: xLabel || 'Order Quantity (Q)' },
+          ticks: { maxTicksLimit: 8 },
+        },
+        y: {
+          title: { display: true, text: 'Annual Cost ($)' },
+          ticks: { callback: v => '$' + v.toLocaleString() },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Grouped bar chart for scenario comparison.
+ * @param {HTMLCanvasElement} canvas
+ * @param {string[]} labels        - scenario names
+ * @param {number[]} wqValues      - Wq per scenario
+ * @param {number[]} utilizationValues - ρ per scenario
+ */
+function renderScenarioBar(canvas, labels, wqValues, utilizationValues) {
+  destroyChart(canvas);
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Avg Wait in Queue (Wq)',
+          data: wqValues,
+          backgroundColor: 'rgba(88,166,255,0.7)',
+          borderColor: '#58a6ff',
+          borderWidth: 1,
+          borderRadius: 4,
+          yAxisID: 'yWq',
+        },
+        {
+          label: 'Utilization (ρ)',
+          data: utilizationValues,
+          backgroundColor: 'rgba(63,185,80,0.7)',
+          borderColor: '#3fb950',
+          borderWidth: 1,
+          borderRadius: 4,
+          yAxisID: 'yRho',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#8b949e', boxWidth: 12 },
+        },
+        tooltip: {
+          mode: 'index', intersect: false,
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.yAxisID === 'yRho') {
+                return `ρ = ${(ctx.raw * 100).toFixed(1)}%`;
+              }
+              return `Wq = ${ctx.raw.toFixed(4)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e' } },
+        yWq: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'Wq (time units)', color: '#58a6ff' },
+          ticks: { color: '#58a6ff' },
+        },
+        yRho: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: 'Utilization ρ', color: '#3fb950' },
+          ticks: {
+            color: '#3fb950',
+            callback: v => (v * 100).toFixed(0) + '%',
+          },
+          grid: { drawOnChartArea: false },
+          min: 0, max: 1,
+        },
+      },
+    },
+  });
+}
+
 window.SimCharts = {
   initChartDefaults,
   renderProbDist,
   renderCostCurve,
+  renderSimpleCostCurve,
   renderProfitCurve,
   renderWaitHistogram,
+  renderScenarioBar,
 };

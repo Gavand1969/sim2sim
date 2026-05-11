@@ -389,6 +389,267 @@ body {
   padding: 2px 10px; border-radius: 99px;
 }
 
+/* ── Formula Box (KaTeX) ─────────────────────────────── */
+.formula-box {
+  background: var(--bg-base);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.formula-box .katex { font-size: 1em; }
+
+/* ── Table Wrapper (scrollable) ──────────────────────── */
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* ── Comparison / Results Tables ─────────────────────── */
+.compare-table,
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.compare-table th,
+.results-table th {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--space-2) var(--space-4);
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.compare-table th:first-child,
+.results-table th:first-child { text-align: left; }
+.compare-table td,
+.results-table td {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+.compare-table td:first-child,
+.results-table td:first-child {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  text-align: left;
+}
+.compare-table tr:last-child td,
+.results-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td,
+.results-table tr:hover td { background: var(--bg-hover); }
+
+/* Highlighted binding constraint */
+.results-table tr.binding td {
+  color: var(--warning);
+  background: rgba(210,153,34,.06);
+}
+.results-table tr.binding td:first-child { color: var(--warning); }
+
+/* ── Scenario Builder ─────────────────────────────────── */
+.scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.scenario-row {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  display: grid;
+  grid-template-columns: auto 1fr 1fr 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+.scenario-row .scenario-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.scenario-row input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: var(--space-1) var(--space-2);
+}
+.scenario-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.btn-remove {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-remove:hover { border-color: var(--danger); color: var(--danger); }
+
+.btn-secondary {
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── LP Builder ───────────────────────────────────────── */
+.lp-obj-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.coeff-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.coeff-row .coeff-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.coeff-row .coeff-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.coeff-row input {
+  width: 70px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: var(--space-1) var(--space-2);
+  text-align: center;
+}
+.coeff-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.lp-constraint-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-base);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+.lp-constraint-row .constraint-name {
+  width: 110px;
+}
+.lp-constraint-row .rhs-input {
+  width: 80px;
+}
+.lp-constraint-row span.leq {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── CPM Builder ──────────────────────────────────────── */
+.cpm-task-row {
+  display: grid;
+  grid-template-columns: 100px 80px 80px 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-base);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+.cpm-task-row input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.83rem;
+  padding: var(--space-1) var(--space-2);
+}
+.cpm-task-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* CPM critical path highlight */
+.cpm-critical {
+  color: var(--danger) !important;
+  font-weight: 600;
+}
+.cpm-critical-row td { background: rgba(248,81,73,.06); }
+
+/* ── Compare section card ─────────────────────────────── */
+.compare-section {
+  margin-top: var(--space-6);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+.compare-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* ── Warning / note banner ────────────────────────────── */
+.result-note {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(210,153,34,.08);
+  border: 1px solid rgba(210,153,34,.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--warning);
+  line-height: 1.5;
+}
+.result-note.info {
+  background: rgba(88,166,255,.06);
+  border-color: rgba(88,166,255,.25);
+  color: var(--accent);
+}
+
 /* ── Scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }

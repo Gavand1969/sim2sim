@@ -82,5 +82,19 @@ async function getExplanation(modelType, parameters, results) {
   return post('/api/explain', { model_type: modelType, parameters, results });
 }
 
+/** Generic POST — used by new inventory and optimization endpoints */
+async function postEndpoint(path, params) {
+  return post('/api' + path, params);
+}
+
+/** Scenario comparison endpoint */
+async function compareScenarios(body) {
+  return post('/api/queuing/compare', body);
+}
+
 // Expose to app.js (no module bundler needed on Replit)
-window.SimAPI = { analyseQueue, analyseEOQ, analyseNewsvendor, runSimulation, getExplanation, ApiError };
+window.SimAPI = {
+  analyseQueue, analyseEOQ, analyseNewsvendor, runSimulation, getExplanation,
+  post: postEndpoint, compareScenarios,
+  ApiError,
+};

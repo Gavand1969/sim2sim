@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sim2Real — Interactive Operations Research Simulator with AI-powered explanations" />
-  <title>Sim2Real | Operations Research Simulator</title>
+  <meta name="description" content="Sim2Real — PhD-level Operations Research platform with AI explanations. Queuing, inventory, simulation, and optimization — free in your browser." />
+  <title>Sim2Real | Operations Research Platform</title>
 
-  <!-- Google Fonts -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
+  <!-- KaTeX — LaTeX formula rendering, no build step -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" defer></script>
 
-  <!-- App styles & scripts -->
+  <!-- App -->
   <link rel="stylesheet" href="/static/css/style.css" />
   <script src="/static/js/api.js"    defer></script>
   <script src="/static/js/charts.js" defer></script>
@@ -22,7 +28,7 @@
 </head>
 <body>
 
-<!-- ════════════════════ HEADER ════════════════════ -->
+<!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <div class="header-inner">
     <div class="brand">
@@ -32,45 +38,58 @@
     </div>
     <nav class="header-nav">
       <a href="/api/docs" target="_blank" rel="noopener" class="nav-link">API Docs</a>
-      <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+      <a href="https://github.com/Gavand1969/sim2sim" target="_blank" rel="noopener" class="nav-link">GitHub</a>
     </nav>
   </div>
 </header>
 
-<!-- ════════════════════ HERO ════════════════════ -->
+<!-- ════════════ HERO ════════════ -->
 <section class="hero">
   <h1 class="hero-title">Model. Simulate. Decide.</h1>
   <p class="hero-sub">
-    Exact analytical solutions + Monte Carlo simulation for queuing systems and
-    inventory models — with AI-generated business insights.
+    PhD-level operations research in your browser — queuing theory, inventory optimization,
+    Monte Carlo simulation, and linear programming with AI-generated insights.
+    Arena costs $5,000/year. This is free.
   </p>
 </section>
 
-<!-- ════════════════════ MODEL TABS ════════════════════ -->
+<!-- ════════════ TABS ════════════ -->
 <div class="tab-bar" role="tablist" aria-label="Model selector">
-  <button class="tab active" data-tab="queuing"    role="tab" aria-selected="true">Queuing</button>
-  <button class="tab"        data-tab="eoq"        role="tab">EOQ</button>
-  <button class="tab"        data-tab="newsvendor" role="tab">Newsvendor</button>
-  <button class="tab"        data-tab="simulation" role="tab">Monte Carlo</button>
+  <button class="tab active" data-tab="queuing"      role="tab" aria-selected="true">Queuing</button>
+  <button class="tab"        data-tab="inventory"    role="tab">Inventory</button>
+  <button class="tab"        data-tab="simulation"   role="tab">Monte Carlo</button>
+  <button class="tab"        data-tab="optimization" role="tab">Optimization</button>
 </div>
 
-<!-- ════════════════════ MAIN WORKSPACE ════════════════════ -->
+<!-- ════════════ WORKSPACE ════════════ -->
 <main class="workspace">
 
-  <!-- ── QUEUING PANEL ─────────────────────────────────────── -->
+  <!-- ══ QUEUING PANEL ══ -->
   <section id="panel-queuing" class="panel active" aria-label="Queuing models">
     <div class="panel-layout">
 
-      <!-- Inputs -->
       <aside class="input-card">
-        <h2 class="card-title">Parameters</h2>
+        <h2 class="card-title">Queuing Parameters</h2>
 
-        <label class="field-label" for="q-model">Queue Model</label>
+        <label class="field-label" for="q-model">Model</label>
         <select id="q-model" class="field-select">
-          <option value="MM1">M/M/1 — Single server, exponential</option>
-          <option value="MMC">M/M/c — Multi-server, exponential</option>
-          <option value="MD1">M/D/1 — Single server, deterministic</option>
-          <option value="MG1">M/G/1 — Single server, general</option>
+          <optgroup label="Single-Server">
+            <option value="MM1">M/M/1 — Exponential arrivals &amp; service</option>
+            <option value="MD1">M/D/1 — Deterministic service</option>
+            <option value="MG1">M/G/1 — General service (P-K formula)</option>
+            <option value="GG1">G/G/1 — General arrivals &amp; service (Kingman)</option>
+          </optgroup>
+          <optgroup label="Multi-Server">
+            <option value="MMC">M/M/c — Parallel servers</option>
+          </optgroup>
+          <optgroup label="Finite Capacity">
+            <option value="MM1K">M/M/1/K — Single server, capacity K</option>
+            <option value="MMCK">M/M/c/K — Multi-server, capacity K</option>
+          </optgroup>
+          <optgroup label="Special">
+            <option value="MMINF">M/M/∞ — Infinite servers (self-service)</option>
+            <option value="BULK">M[X]/M/1 — Batch arrivals</option>
+          </optgroup>
         </select>
 
         <label class="field-label" for="q-lambda">Arrival Rate (λ) <span class="unit">customers / time unit</span></label>
@@ -80,14 +99,31 @@
         <input id="q-mu" type="number" class="field-input" value="6" min="0.01" max="10000" step="0.1" />
 
         <div id="q-c-group">
-          <label class="field-label" for="q-c">Number of Servers (c)</label>
-          <input id="q-c" type="number" class="field-input" value="1" min="1" max="100" step="1" />
+          <label class="field-label" for="q-c">Servers (c)</label>
+          <input id="q-c" type="number" class="field-input" value="1" min="1" max="200" step="1" />
+        </div>
+
+        <div id="q-K-group" style="display:none">
+          <label class="field-label" for="q-K">Capacity (K) <span class="unit">max in system</span></label>
+          <input id="q-K" type="number" class="field-input" value="10" min="1" max="10000" step="1" />
         </div>
 
         <div id="q-csv-group" style="display:none">
-          <label class="field-label" for="q-csv">Service Cs² <span class="unit">squared coeff. of variation</span></label>
+          <label class="field-label" for="q-csv">Service Cs² <span class="unit">squared CV of service time</span></label>
           <input id="q-csv" type="number" class="field-input" value="1" min="0" max="100" step="0.1" />
-          <p class="field-hint">1 = exponential, 0 = deterministic, &gt;1 = high-variance</p>
+          <p class="field-hint">1 = exponential · 0 = deterministic · &gt;1 = high variance</p>
+        </div>
+
+        <div id="q-cav-group" style="display:none">
+          <label class="field-label" for="q-cav">Arrival Ca² <span class="unit">squared CV of interarrival time</span></label>
+          <input id="q-cav" type="number" class="field-input" value="1" min="0" max="100" step="0.1" />
+          <p class="field-hint">1 = Poisson · 0 = regular (deterministic arrivals)</p>
+        </div>
+
+        <div id="q-batch-group" style="display:none">
+          <label class="field-label" for="q-batch">Batch Size (b)</label>
+          <input id="q-batch" type="number" class="field-input" value="3" min="2" max="1000" step="1" />
+          <p class="field-hint">Number of customers per arriving batch</p>
         </div>
 
         <div class="utilization-preview" id="q-util-preview">
@@ -95,9 +131,20 @@
         </div>
 
         <button id="btn-queuing" class="btn-primary">Run Analysis</button>
+
+        <div class="compare-section">
+          <button id="btn-compare-toggle" class="btn-secondary" style="margin-top:0.75rem">
+            ⊕ Compare Scenarios
+          </button>
+          <div id="compare-panel" style="display:none;margin-top:0.75rem">
+            <p class="field-hint" style="margin-bottom:0.5rem">Add up to 7 more scenarios. Each inherits current λ/μ — edit what you want to vary.</p>
+            <div id="scenario-list"></div>
+            <button id="btn-add-scenario" class="btn-secondary" style="margin-top:0.5rem">+ Add Scenario</button>
+            <button id="btn-run-compare" class="btn-primary" style="margin-top:0.5rem">Run Comparison</button>
+          </div>
+        </div>
       </aside>
 
-      <!-- Results -->
       <div class="results-area" id="results-queuing" aria-live="polite">
         <div class="empty-state">
           <span class="empty-icon">⬡</span>
@@ -107,80 +154,125 @@
     </div>
   </section>
 
-  <!-- ── EOQ PANEL ─────────────────────────────────────────── -->
-  <section id="panel-eoq" class="panel" aria-label="EOQ model" hidden>
+  <!-- ══ INVENTORY PANEL ══ -->
+  <section id="panel-inventory" class="panel" aria-label="Inventory models" hidden>
     <div class="panel-layout">
+
       <aside class="input-card">
-        <h2 class="card-title">Parameters</h2>
+        <h2 class="card-title">Inventory Parameters</h2>
 
-        <label class="field-label" for="eoq-demand">Annual Demand (D) <span class="unit">units / year</span></label>
-        <input id="eoq-demand" type="number" class="field-input" value="10000" min="1" max="1000000" step="1" />
-
-        <label class="field-label" for="eoq-k">Ordering Cost (K) <span class="unit">$ / order</span></label>
-        <input id="eoq-k" type="number" class="field-input" value="200" min="0.01" max="1000000" step="1" />
-
-        <label class="field-label" for="eoq-c">Unit Cost (c) <span class="unit">$ / unit</span></label>
-        <input id="eoq-c" type="number" class="field-input" value="50" min="0.01" max="100000" step="0.01" />
-
-        <label class="field-label" for="eoq-i">Holding Rate (i) <span class="unit">fraction of unit cost / year</span></label>
-        <input id="eoq-i" type="number" class="field-input" value="0.25" min="0.001" max="1" step="0.01" />
-        <p class="field-hint">e.g. 0.25 = 25% annual holding cost</p>
-
-        <button id="btn-eoq" class="btn-primary">Run Analysis</button>
-      </aside>
-      <div class="results-area" id="results-eoq" aria-live="polite">
-        <div class="empty-state">
-          <span class="empty-icon">⬡</span>
-          <p>Set parameters and click <strong>Run Analysis</strong></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── NEWSVENDOR PANEL ───────────────────────────────────── -->
-  <section id="panel-newsvendor" class="panel" aria-label="Newsvendor model" hidden>
-    <div class="panel-layout">
-      <aside class="input-card">
-        <h2 class="card-title">Parameters</h2>
-
-        <label class="field-label" for="nv-price">Selling Price (p) <span class="unit">$ / unit</span></label>
-        <input id="nv-price" type="number" class="field-input" value="100" min="0.01" max="1000000" step="1" />
-
-        <label class="field-label" for="nv-cost">Unit Cost (c) <span class="unit">$ / unit</span></label>
-        <input id="nv-cost" type="number" class="field-input" value="60" min="0.01" max="1000000" step="1" />
-
-        <label class="field-label" for="nv-salvage">Salvage Value (s) <span class="unit">$ / unsold unit</span></label>
-        <input id="nv-salvage" type="number" class="field-input" value="20" min="0" max="1000000" step="1" />
-
-        <label class="field-label" for="nv-dist">Demand Distribution</label>
-        <select id="nv-dist" class="field-select">
-          <option value="normal">Normal</option>
-          <option value="poisson">Poisson</option>
-          <option value="uniform">Uniform</option>
+        <label class="field-label" for="inv-model">Model</label>
+        <select id="inv-model" class="field-select">
+          <optgroup label="Deterministic">
+            <option value="eoq">EOQ — Economic Order Quantity</option>
+            <option value="eoq-backorder">EOQ + Backorders — Planned shortages</option>
+            <option value="epq">EPQ — Economic Production Quantity</option>
+          </optgroup>
+          <optgroup label="Stochastic Single-Period">
+            <option value="newsvendor">Newsvendor — Critical ratio</option>
+          </optgroup>
+          <optgroup label="Stochastic Multi-Period">
+            <option value="reorder-point">Reorder Point (Q,r) — Continuous review</option>
+            <option value="base-stock">Base Stock — Order-up-to policy</option>
+          </optgroup>
         </select>
 
-        <label class="field-label" for="nv-mean">Demand Mean (μ)</label>
-        <input id="nv-mean" type="number" class="field-input" value="500" min="1" max="1000000" step="1" />
+        <!-- EOQ fields -->
+        <div id="inv-eoq-fields">
+          <label class="field-label" for="eoq-demand">Annual Demand (D) <span class="unit">units/year</span></label>
+          <input id="eoq-demand" type="number" class="field-input" value="10000" min="1" max="1000000" step="1" />
 
-        <label class="field-label" for="nv-std">Demand Std Dev (σ)</label>
-        <input id="nv-std" type="number" class="field-input" value="100" min="1" max="1000000" step="1" />
+          <label class="field-label" for="eoq-k">Ordering Cost (K) <span class="unit">$/order</span></label>
+          <input id="eoq-k" type="number" class="field-input" value="200" min="0.01" max="1000000" step="1" />
 
-        <button id="btn-newsvendor" class="btn-primary">Run Analysis</button>
+          <label class="field-label" for="eoq-c">Unit Cost (c) <span class="unit">$/unit</span></label>
+          <input id="eoq-c" type="number" class="field-input" value="50" min="0.01" max="100000" step="0.01" />
+
+          <label class="field-label" for="eoq-i">Holding Rate (i) <span class="unit">fraction of unit cost/year</span></label>
+          <input id="eoq-i" type="number" class="field-input" value="0.25" min="0.001" max="1" step="0.01" />
+          <p class="field-hint">e.g. 0.25 = 25% annual holding cost</p>
+        </div>
+
+        <!-- EOQ backorder extra field -->
+        <div id="inv-backorder-fields" style="display:none">
+          <label class="field-label" for="eoq-pi">Backorder Cost (π) <span class="unit">$/unit/year</span></label>
+          <input id="eoq-pi" type="number" class="field-input" value="100" min="0.01" max="1000000" step="1" />
+          <p class="field-hint">Annual cost of having one unit on backorder</p>
+        </div>
+
+        <!-- EPQ extra field -->
+        <div id="inv-epq-fields" style="display:none">
+          <label class="field-label" for="epq-P">Production Rate (P) <span class="unit">units/year</span></label>
+          <input id="epq-P" type="number" class="field-input" value="40000" min="1" max="10000000" step="100" />
+          <p class="field-hint">Must exceed annual demand D</p>
+        </div>
+
+        <!-- Newsvendor fields -->
+        <div id="inv-newsvendor-fields" style="display:none">
+          <label class="field-label" for="nv-price">Selling Price (p) <span class="unit">$/unit</span></label>
+          <input id="nv-price" type="number" class="field-input" value="100" min="0.01" max="1000000" step="1" />
+
+          <label class="field-label" for="nv-cost">Unit Cost (c) <span class="unit">$/unit</span></label>
+          <input id="nv-cost" type="number" class="field-input" value="60" min="0.01" max="1000000" step="1" />
+
+          <label class="field-label" for="nv-salvage">Salvage Value (s) <span class="unit">$/unsold unit</span></label>
+          <input id="nv-salvage" type="number" class="field-input" value="20" min="0" max="1000000" step="1" />
+
+          <label class="field-label" for="nv-dist">Demand Distribution</label>
+          <select id="nv-dist" class="field-select">
+            <option value="normal">Normal</option>
+            <option value="poisson">Poisson</option>
+            <option value="uniform">Uniform</option>
+          </select>
+
+          <label class="field-label" for="nv-mean">Demand Mean (μ)</label>
+          <input id="nv-mean" type="number" class="field-input" value="500" min="1" max="1000000" step="1" />
+
+          <label class="field-label" for="nv-std">Demand Std Dev (σ)</label>
+          <input id="nv-std" type="number" class="field-input" value="100" min="1" max="1000000" step="1" />
+        </div>
+
+        <!-- Reorder Point / Base Stock shared fields -->
+        <div id="inv-reorder-fields" style="display:none">
+          <label class="field-label" for="rp-demand">Annual Demand (D) <span class="unit">units/year</span></label>
+          <input id="rp-demand" type="number" class="field-input" value="10000" min="1" max="10000000" step="1" />
+
+          <label class="field-label" for="rp-lead">Lead Time (L) <span class="unit">years (e.g. 0.05 = ~18 days)</span></label>
+          <input id="rp-lead" type="number" class="field-input" value="0.05" min="0.001" max="5" step="0.001" />
+
+          <label class="field-label" for="rp-sigma">Daily Demand Std Dev (σ_d)</label>
+          <input id="rp-sigma" type="number" class="field-input" value="10" min="0" max="100000" step="0.1" />
+
+          <label class="field-label" for="rp-k">Ordering Cost (K) <span class="unit">$/order</span></label>
+          <input id="rp-k" type="number" class="field-input" value="200" min="0.01" max="1000000" step="1" />
+
+          <label class="field-label" for="rp-c">Unit Cost (c) <span class="unit">$/unit</span></label>
+          <input id="rp-c" type="number" class="field-input" value="50" min="0.01" max="100000" step="0.01" />
+
+          <label class="field-label" for="rp-i">Holding Rate (i)</label>
+          <input id="rp-i" type="number" class="field-input" value="0.25" min="0.001" max="1" step="0.01" />
+
+          <label class="field-label" for="rp-sl">Service Level <span class="unit">e.g. 0.95 = 95%</span></label>
+          <input id="rp-sl" type="number" class="field-input" value="0.95" min="0.5" max="0.999" step="0.01" />
+        </div>
+
+        <button id="btn-inventory" class="btn-primary" style="margin-top:1rem">Run Analysis</button>
       </aside>
-      <div class="results-area" id="results-newsvendor" aria-live="polite">
+
+      <div class="results-area" id="results-inventory" aria-live="polite">
         <div class="empty-state">
           <span class="empty-icon">⬡</span>
-          <p>Set parameters and click <strong>Run Analysis</strong></p>
+          <p>Select a model and click <strong>Run Analysis</strong></p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── SIMULATION PANEL ───────────────────────────────────── -->
+  <!-- ══ SIMULATION PANEL ══ -->
   <section id="panel-simulation" class="panel" aria-label="Monte Carlo simulation" hidden>
     <div class="panel-layout">
       <aside class="input-card">
-        <h2 class="card-title">Parameters</h2>
+        <h2 class="card-title">Simulation Parameters</h2>
 
         <label class="field-label" for="sim-model">Queue Model</label>
         <select id="sim-model" class="field-select">
@@ -201,11 +293,11 @@
         <label class="field-label" for="sim-n">Customers per Run</label>
         <input id="sim-n" type="number" class="field-input" value="5000" min="100" max="50000" step="100" />
 
-        <label class="field-label" for="sim-reps">Replications <span class="unit">for CI</span></label>
+        <label class="field-label" for="sim-reps">Replications <span class="unit">for 95% CI</span></label>
         <input id="sim-reps" type="number" class="field-input" value="10" min="1" max="50" step="1" />
 
         <label class="field-label" for="sim-seed">Random Seed <span class="unit">optional</span></label>
-        <input id="sim-seed" type="number" class="field-input" placeholder="leave blank for random" min="0" max="2147483647" />
+        <input id="sim-seed" type="number" class="field-input" placeholder="blank = random" min="0" max="2147483647" />
 
         <button id="btn-simulation" class="btn-primary">Run Simulation</button>
       </aside>
@@ -218,21 +310,84 @@
     </div>
   </section>
 
+  <!-- ══ OPTIMIZATION PANEL ══ -->
+  <section id="panel-optimization" class="panel" aria-label="Optimization models" hidden>
+    <div class="panel-layout">
+
+      <aside class="input-card">
+        <h2 class="card-title">Optimization</h2>
+
+        <label class="field-label" for="opt-model">Model</label>
+        <select id="opt-model" class="field-select">
+          <option value="lp">Linear Programming (LP)</option>
+          <option value="cpm">CPM / PERT — Project Scheduling</option>
+        </select>
+
+        <!-- LP fields -->
+        <div id="opt-lp-fields">
+          <p class="field-hint" style="margin-bottom:0.75rem">
+            Formulation: maximize/minimize $c^T x$ subject to $Ax \le b$, $x \ge 0$.
+          </p>
+
+          <label class="field-label" for="lp-obj">Objective</label>
+          <select id="lp-obj" class="field-select">
+            <option value="maximize">Maximize</option>
+            <option value="minimize">Minimize</option>
+          </select>
+
+          <label class="field-label" for="lp-nvars">Number of Variables</label>
+          <select id="lp-nvars" class="field-select">
+            <option value="2">2 variables</option>
+            <option value="3">3 variables</option>
+            <option value="4">4 variables</option>
+          </select>
+
+          <div id="lp-var-names" style="margin-top:0.5rem"></div>
+
+          <label class="field-label" style="margin-top:0.75rem">Objective Coefficients (c)</label>
+          <div id="lp-obj-coeffs" class="coeff-row"></div>
+
+          <label class="field-label" style="margin-top:0.75rem">Constraints ($Ax \le b$)</label>
+          <div id="lp-constraints"></div>
+          <button id="btn-add-constraint" class="btn-secondary" style="margin-top:0.5rem">+ Add Constraint</button>
+        </div>
+
+        <!-- CPM fields -->
+        <div id="opt-cpm-fields" style="display:none">
+          <p class="field-hint" style="margin-bottom:0.75rem">
+            Enter tasks with durations and predecessor dependencies. Use PERT variance $((b-a)/6)^2$ for uncertain durations.
+          </p>
+          <div id="cpm-tasks"></div>
+          <button id="btn-add-task" class="btn-secondary" style="margin-top:0.5rem">+ Add Task</button>
+        </div>
+
+        <button id="btn-optimization" class="btn-primary" style="margin-top:1rem">Solve</button>
+      </aside>
+
+      <div class="results-area" id="results-optimization" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon">⬡</span>
+          <p>Configure your problem and click <strong>Solve</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
-<!-- ════════════════════ AI EXPLANATION PANEL ════════════════════ -->
+<!-- ════════════ AI PANEL ════════════ -->
 <section class="ai-panel" id="ai-panel" hidden aria-live="polite">
   <div class="ai-inner">
     <div class="ai-header">
       <span class="ai-icon">⬡</span>
       <span class="ai-title">AI Insight</span>
-      <span class="ai-model" id="ai-model-badge"></span>
+      <span class="ai-model-badge" id="ai-model-badge"></span>
     </div>
     <div class="ai-body" id="ai-body">Loading…</div>
   </div>
 </section>
 
-<!-- ════════════════════ TOAST NOTIFICATION ════════════════════ -->
+<!-- ════════════ TOAST ════════════ -->
 <div id="toast" class="toast" aria-live="assertive" aria-atomic="true"></div>
 
 </body>
