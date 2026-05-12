@@ -16,7 +16,7 @@ import asyncio
 import logging
 
 import anthropic
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 
 from src.ai.explainer import explain
 from src.api.schemas import (
@@ -34,7 +34,12 @@ from src.api.schemas import (
     ScenarioCompareRequest, ScenarioCompareResponse,
     SimulationRequest, SimulationResponse,
 )
+from src.billing import licenses as billing_licenses
 from src.billing.licenses import require_pro
+from src.billing.schemas import (
+    ActivateRequest, ActivateResponse, LicenseStatusResponse, WebhookAck,
+)
+from src.billing.webhook import handle_stripe_webhook
 from src.export.excel import build_inventory_xlsx, build_lp_xlsx, build_queuing_xlsx
 from src.export.pdf import build_inventory_pdf, build_lp_pdf, build_queuing_pdf
 from src.models.inventory import (
@@ -443,6 +448,44 @@ async def export_lp_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="sim2sim-lp.pdf"'},
     )
+
+
+# ── Billing: license activation + Stripe webhook ──────────────────────────────
+
+@router.post("/billing/activate", response_model=ActivateResponse, tags=["billing"])
+async def billing_activate(body: ActivateRequest):
+    """
+    Activate a license key.  Returns tier/email and bumps the activation
+    counter on the server.  Idempotent — a key can be activated repeatedly.
+    """
+    info = billing_licenses.activate_license(body.key)
+    if info is None:
+        return ActivateResponse(valid=False, message="Invalid or unknown license key.")
+    return ActivateResponse(
+        valid=True, tier=info.tier, email=info.email,
+        activated_at=info.activated_at,
+    )
+
+
+@router.get("/billing/status", response_model=LicenseStatusResponse, tags=["billing"])
+async def billing_status(x_license_key: str = Header(default="")):
+    """
+    Check current license status without recording an activation.  The
+    frontend calls this on page load to decide whether to show Pro UI.
+    """
+    info = billing_licenses.validate_license(x_license_key)
+    if info is None:
+        return LicenseStatusResponse(valid=False, message="No valid license key.")
+    return LicenseStatusResponse(
+        valid=True, tier=info.tier, email=info.email,
+        activation_count=info.activation_count,
+    )
+
+
+@router.post("/billing/webhook", response_model=WebhookAck, tags=["billing"])
+async def billing_webhook(request: Request):
+    """Stripe webhook receiver — see src/billing/webhook.py for details."""
+    return await handle_stripe_webhook(request)
 
 
 # ── AI Explanation ────────────────────────────────────────────────────────────

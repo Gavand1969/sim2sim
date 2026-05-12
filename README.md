@@ -8,7 +8,7 @@
 
 PhD-level operations research in your browser — queuing theory, inventory optimization, Monte Carlo simulation, and linear programming with AI-generated insights powered by Claude.
 
-Arena costs $5,000/year. AnyLogic costs $7,000/year. Sim2Sim is free to use and has an optional one-time **Pro** upgrade for advanced features (scenario library, Excel/PDF export, batch API).
+Arena costs $5,000/year. AnyLogic costs $7,000/year. Sim2Sim is free to use and has an optional one-time **Pro** ($49) or **Team** ($249) upgrade for Excel/PDF export, unlimited AI explanations, advanced inventory models, and commercial-use rights. See [Pricing](static/pricing.html) and [LAUNCH.md](LAUNCH.md) for deployment.
 
 ![Sim2Sim Screenshot](docs/screenshot.png)
 

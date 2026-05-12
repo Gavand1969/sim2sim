@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sim2Sim pricing — Free, Pro, and Team tiers. Lifetime licenses, no subscription." />
+  <title>Pricing — Sim2Sim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/billing.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <a href="/" class="brand" style="text-decoration:none;color:inherit;">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">Sim<span class="brand-accent">2</span>Sim</span>
+      <span class="brand-tag">Operations Research</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">App</a>
+      <a href="/pricing" class="nav-link" style="color:var(--accent);">Pricing</a>
+      <a href="/account" class="nav-link">Account</a>
+      <a href="https://github.com/Gavand1969/sim2sim" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="billing-main">
+  <section class="billing-hero">
+    <h1>Lifetime access. No subscription.</h1>
+    <p>Pay once, own it forever. Every tier includes future updates and improvements.</p>
+  </section>
+
+  <section class="pricing-grid">
+    <!-- ── FREE ── -->
+    <article class="price-card">
+      <header class="price-card-head">
+        <h2>Free</h2>
+        <div class="price">
+          <span class="price-amount">$0</span>
+          <span class="price-period">forever</span>
+        </div>
+        <p class="price-tagline">Great for learning and homework.</p>
+      </header>
+      <ul class="price-features">
+        <li>All 9 queuing models (M/M/1, M/M/c, M/G/1, …)</li>
+        <li>EOQ and Newsvendor inventory models</li>
+        <li>Monte Carlo simulation</li>
+        <li>Linear programming + CPM scheduling</li>
+        <li>5 AI explanations per day</li>
+        <li class="muted">No exports</li>
+        <li class="muted">Standard rate limit</li>
+      </ul>
+      <a class="price-cta secondary" href="/">Use Free</a>
+    </article>
+
+    <!-- ── PRO ── -->
+    <article class="price-card featured" data-tier="pro">
+      <div class="price-badge">Most popular</div>
+      <header class="price-card-head">
+        <h2>Pro</h2>
+        <div class="price">
+          <span class="price-amount">$49</span>
+          <span class="price-period">one-time, lifetime</span>
+        </div>
+        <p class="price-tagline">For analysts and small-business owners.</p>
+      </header>
+      <ul class="price-features">
+        <li>Everything in Free</li>
+        <li><strong>Excel exports</strong> (queuing, inventory, LP)</li>
+        <li><strong>PDF reports</strong> with charts and notes</li>
+        <li><strong>Unlimited</strong> AI explanations</li>
+        <li>All advanced inventory models (EOQ-backorder, EPQ, ROP, base-stock)</li>
+        <li>Higher rate limit (100 req/min)</li>
+        <li>Lifetime updates</li>
+      </ul>
+      <a class="price-cta primary" id="cta-pro" href="#" target="_blank" rel="noopener">Buy Pro — $49</a>
+      <p class="price-fine">License key emailed instantly after checkout.</p>
+    </article>
+
+    <!-- ── TEAM ── -->
+    <article class="price-card" data-tier="team">
+      <header class="price-card-head">
+        <h2>Team</h2>
+        <div class="price">
+          <span class="price-amount">$249</span>
+          <span class="price-period">one-time, lifetime</span>
+        </div>
+        <p class="price-tagline">For consultants and small teams.</p>
+      </header>
+      <ul class="price-features">
+        <li>Everything in Pro</li>
+        <li>Branded PDF reports (your logo + footer)</li>
+        <li>API access with token authentication</li>
+        <li>Commercial-use license</li>
+        <li>Up to 5 seats — share the key with your team</li>
+        <li>Priority email support</li>
+        <li>Lifetime updates</li>
+      </ul>
+      <a class="price-cta primary" id="cta-team" href="#" target="_blank" rel="noopener">Buy Team — $249</a>
+      <p class="price-fine">License key emailed instantly after checkout.</p>
+    </article>
+  </section>
+
+  <section class="faq">
+    <h2>FAQ</h2>
+    <details><summary>Is this really lifetime?</summary>
+      <p>Yes. Pay once, use it forever. All future updates included.</p></details>
+    <details><summary>What if my browser clears storage?</summary>
+      <p>Your license key was emailed to you — just paste it on the
+        <a href="/account">Account page</a> again. You can re-activate as many times as needed.</p></details>
+    <details><summary>Can I use Pro on multiple computers?</summary>
+      <p>Yes. The key is yours — use it on every machine and browser you own.</p></details>
+    <details><summary>Do you offer refunds?</summary>
+      <p>Yes. Email us within 14 days and we'll refund, no questions asked.</p></details>
+    <details><summary>Do I have to log in?</summary>
+      <p>No login. After purchase you'll get a license key by email — paste it once and you're done.</p></details>
+  </section>
+</main>
+
+<footer class="billing-footer">
+  <p>Built with FastAPI + Anthropic AI · <a href="https://github.com/Gavand1969/sim2sim">Open source</a></p>
+</footer>
+
+<script src="/static/js/license.js" defer></script>
+<script>
+  // Wire CTA URLs from window globals injected by license.js (or fall back).
+  document.addEventListener("DOMContentLoaded", () => {
+    const proCTA  = document.getElementById("cta-pro");
+    const teamCTA = document.getElementById("cta-team");
+    const proUrl  = window.STRIPE_PRO_URL  || "https://buy.stripe.com/__configure_me__";
+    const teamUrl = window.STRIPE_TEAM_URL || "https://buy.stripe.com/__configure_me__";
+    if (proCTA)  proCTA.href = proUrl;
+    if (teamCTA) teamCTA.href = teamUrl;
+  });
+</script>
+</body>
+</html>

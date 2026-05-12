@@ -15,13 +15,16 @@ from slowapi.errors import RateLimitExceeded
 
 from src.api.middleware import limiter, add_security_headers
 from src.api.routes import router
+from src.billing import db as billing_db
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: nothing to initialise beyond imports
+    # Startup: initialise the billing DB so license activation works
+    # immediately on first boot (Replit's filesystem persists across runs).
+    billing_db.init_db()
     yield
     # Shutdown: nothing to clean up
 
@@ -78,6 +81,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", include_in_schema=False)
 async def serve_frontend():
     return FileResponse("static/index.html")
+
+
+@app.get("/pricing", include_in_schema=False)
+async def serve_pricing():
+    return FileResponse("static/pricing.html")
+
+
+@app.get("/account", include_in_schema=False)
+async def serve_account():
+    return FileResponse("static/account.html")
+
 
 # Catch-all so that client-side navigation always returns index.html
 @app.get("/{full_path:path}", include_in_schema=False)

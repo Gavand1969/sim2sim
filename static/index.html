@@ -22,9 +22,12 @@
 
   <!-- App -->
   <link rel="stylesheet" href="/static/css/style.css" />
-  <script src="/static/js/api.js"    defer></script>
-  <script src="/static/js/charts.js" defer></script>
-  <script src="/static/js/app.js"    defer></script>
+  <link rel="stylesheet" href="/static/css/billing.css" />
+  <script src="/static/js/api.js"     defer></script>
+  <script src="/static/js/charts.js"  defer></script>
+  <script src="/static/js/license.js" defer></script>
+  <script src="/static/js/app.js"     defer></script>
+  <script src="/static/js/exports.js" defer></script>
 </head>
 <body>
 
@@ -37,6 +40,8 @@
       <span class="brand-tag">Operations Research</span>
     </div>
     <nav class="header-nav">
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/account" class="nav-link">Account<span id="tier-pill" class="tier-pill free">Free</span></a>
       <a href="/api/docs" target="_blank" rel="noopener" class="nav-link">API Docs</a>
       <a href="https://github.com/Gavand1969/sim2sim" target="_blank" rel="noopener" class="nav-link">GitHub</a>
     </nav>
