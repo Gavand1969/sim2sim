@@ -79,9 +79,14 @@ CREATE INDEX IF NOT EXISTS idx_licenses_stripe ON licenses (stripe_session_id);
 # Mostly identical, but Postgres prefers explicit types & doesn't need
 # executescript().  We use TEXT throughout to match the SQLite shape.
 
+# DigitalOcean managed Postgres revokes CREATE on the `public` schema from
+# non-owner users (Postgres 15+ default).  We create and own our own schema
+# named `sim2sim` and put the licenses table there.  The schema is also added
+# to search_path so unqualified table references work everywhere.
 _PG_SCHEMA_STATEMENTS = [
+    "CREATE SCHEMA IF NOT EXISTS sim2sim",
     """
-    CREATE TABLE IF NOT EXISTS licenses (
+    CREATE TABLE IF NOT EXISTS sim2sim.licenses (
         key TEXT PRIMARY KEY,
         tier TEXT NOT NULL CHECK (tier IN ('pro', 'team')),
         email TEXT NOT NULL,
@@ -92,8 +97,8 @@ _PG_SCHEMA_STATEMENTS = [
         revoked INTEGER NOT NULL DEFAULT 0
     )
     """,
-    "CREATE INDEX IF NOT EXISTS idx_licenses_email ON licenses (email)",
-    "CREATE INDEX IF NOT EXISTS idx_licenses_stripe ON licenses (stripe_session_id)",
+    "CREATE INDEX IF NOT EXISTS idx_licenses_email ON sim2sim.licenses (email)",
+    "CREATE INDEX IF NOT EXISTS idx_licenses_stripe ON sim2sim.licenses (stripe_session_id)",
 ]
 
 
@@ -139,7 +144,12 @@ def _pg_connect():
     # DigitalOcean managed PG requires sslmode=require.  psycopg honours it
     # from the DSN if present; we don't force it here so local Postgres
     # without TLS still works.
-    return psycopg.connect(_database_url(), autocommit=True)
+    conn = psycopg.connect(_database_url(), autocommit=True)
+    # Put our schema first on the search_path so unqualified references hit
+    # `sim2sim.licenses` rather than nothing in `public`.
+    with conn.cursor() as cur:
+        cur.execute("SET search_path TO sim2sim, public")
+    return conn
 
 
 def _pg_fetch_one(sql: str, params: tuple) -> Optional[_DictRow]:
@@ -200,7 +210,7 @@ def reset_db() -> None:
     with _LOCK:
         if _use_postgres():
             with _pg_connect() as conn, conn.cursor() as cur:
-                cur.execute("DROP TABLE IF EXISTS licenses")
+                cur.execute("DROP TABLE IF EXISTS sim2sim.licenses")
             init_db()
         else:
             path = db_path()
@@ -212,7 +222,7 @@ def reset_db() -> None:
 def find_by_stripe_session(session_id: str):
     if _use_postgres():
         return _pg_fetch_one(
-            "SELECT * FROM licenses WHERE stripe_session_id = %s",
+            "SELECT * FROM sim2sim.licenses WHERE stripe_session_id = %s",
             (session_id,),
         )
     conn = _sqlite_conn()
@@ -229,7 +239,7 @@ def find_by_stripe_session(session_id: str):
 def find_by_key(key: str):
     if _use_postgres():
         return _pg_fetch_one(
-            "SELECT * FROM licenses WHERE key = %s",
+            "SELECT * FROM sim2sim.licenses WHERE key = %s",
             (key,),
         )
     conn = _sqlite_conn()
@@ -249,7 +259,7 @@ def insert_license(
 ) -> None:
     if _use_postgres():
         _pg_execute(
-            "INSERT INTO licenses (key, tier, email, created_at, stripe_session_id) "
+            "INSERT INTO sim2sim.licenses (key, tier, email, created_at, stripe_session_id) "
             "VALUES (%s, %s, %s, %s, %s)",
             (key, tier, email, created_at, stripe_session_id),
         )
@@ -268,7 +278,7 @@ def insert_license(
 def record_activation(key: str, activated_at: str) -> None:
     if _use_postgres():
         _pg_execute(
-            "UPDATE licenses "
+            "UPDATE sim2sim.licenses "
             "SET activation_count = activation_count + 1, "
             "    activated_at = COALESCE(activated_at, %s) "
             "WHERE key = %s",
