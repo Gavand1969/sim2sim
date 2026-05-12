@@ -1,5 +1,5 @@
 """
-Sim2Real — Operations Research Simulator
+Sim2Sim — Operations Research Simulator
 Entry point: FastAPI app that serves both the REST API and the static frontend.
 """
 import os
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Sim2Real",
+    title="Sim2Sim",
     description="Operations Research Simulator with AI-powered explanations",
     version="1.0.0",
     docs_url="/api/docs",
@@ -40,10 +40,20 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# In production (Replit) the frontend is served from the same origin, so
-# wildcard CORS is only needed in local development.
+# In production the frontend is served from the same origin, so wildcard
+# CORS is only needed in local development.  In production we REQUIRE an
+# ALLOWED_ORIGIN so we never silently ship with no CORS policy.
 _env = os.getenv("ENVIRONMENT", "development")
-_origins = ["*"] if _env == "development" else [os.getenv("ALLOWED_ORIGIN", "")]
+if _env == "development":
+    _origins: list[str] = ["*"]
+else:
+    _allowed = os.getenv("ALLOWED_ORIGIN", "").strip()
+    if not _allowed:
+        raise RuntimeError(
+            "ENVIRONMENT=production requires ALLOWED_ORIGIN to be set "
+            "(comma-separated list of allowed origins)."
+        )
+    _origins = [o.strip() for o in _allowed.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,

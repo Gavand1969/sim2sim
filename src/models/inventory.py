@@ -282,27 +282,32 @@ class ReorderPointResult:
 
 
 def solve_reorder_point(
-    D: float,          # annual demand
-    L: float,          # lead time (years)
-    sigma_d: float,    # std dev of daily demand (use same time unit as L)
-    K: float,          # ordering cost
-    c: float,          # unit cost
-    i: float,          # holding rate
+    D: float,            # annual demand (units/year)
+    L_days: float,       # lead time in DAYS
+    sigma_d: float,      # std dev of DAILY demand (same time unit as L_days)
+    K: float,            # ordering cost ($/order)
+    c: float,            # unit cost ($/unit)
+    i: float,            # holding rate (fraction/year)
     service_level: float = 0.95,  # target cycle-service level
 ) -> ReorderPointResult:
     """
     Continuous-review (Q, r) inventory policy.
 
+    Units: annual demand D is converted to a daily rate (D/365) for the
+    lead-time demand calculation, ensuring lead-time-day and daily-sigma
+    units agree.  Holding cost h = i·c is annual, so the EOQ uses annual D.
+
     Order quantity Q = EOQ (Wilson formula).
-    Reorder point  r = D·L + z·σ_L  where σ_L = σ_d·√L (annual units).
+    Reorder point  r = (D/365)·L_days + z·σ_L,  σ_L = σ_d·√L_days.
 
     The cycle-service level P(no stockout) = Φ(z).
     Safety stock SS = z·σ_L trades holding cost against stockout risk.
     """
     h       = i * c
-    Q       = math.sqrt(2.0 * K * D / h)           # EOQ order quantity
-    mu_L    = D * L                                  # mean demand during lead time
-    sigma_L = sigma_d * math.sqrt(L)                 # std dev demand during lead time
+    Q       = math.sqrt(2.0 * K * D / h)               # EOQ order quantity (annual)
+    D_day   = D / 365.0                                 # daily demand rate
+    mu_L    = D_day * L_days                            # mean demand during lead time (units)
+    sigma_L = sigma_d * math.sqrt(L_days)               # std dev demand during lead time (units)
     z       = stats.norm.ppf(service_level)
     SS      = z * sigma_L
     r       = mu_L + SS
@@ -336,26 +341,30 @@ class BaseStockResult:
 
 
 def solve_base_stock(
-    D: float,          # annual demand rate
-    L: float,          # replenishment lead time (years)
-    sigma_d: float,    # std dev of daily demand
-    c: float,          # unit cost
-    i: float,          # holding rate
+    D: float,            # annual demand rate (units/year)
+    L_days: float,       # replenishment lead time in DAYS
+    sigma_d: float,      # std dev of DAILY demand
+    c: float,            # unit cost
+    i: float,            # annual holding rate
     service_level: float = 0.95,
 ) -> BaseStockResult:
     """
     Base-stock (order-up-to) policy for single-item, stochastic demand.
 
-    S* = μ_L + z·σ_L  (same expression as reorder point).
+    Units: lead-time is in days and daily sigma is supplied directly, so all
+    lead-time quantities (μ_L, σ_L) are in CONSISTENT day-based units.
+
+    S* = μ_L + z·σ_L.
     Each period, order enough to bring inventory position back to S*.
 
-    E[backorders] = σ_L · L(z)  where L(z) = φ(z) − z·(1−Φ(z)) is the
-    standard normal loss function.
-    Fill rate ≈ 1 − E[B]/D (Type-II service level).
+    E[backorders per cycle] = σ_L · L(z)  where
+    L(z) = φ(z) − z·(1−Φ(z)) is the standard-normal loss function.
+    Type-II fill rate = 1 − E[B per cycle] / E[demand per cycle] = 1 − σ_L·L(z)/μ_L.
     """
     h       = i * c
-    mu_L    = D * L
-    sigma_L = sigma_d * math.sqrt(L)
+    D_day   = D / 365.0
+    mu_L    = D_day * L_days
+    sigma_L = sigma_d * math.sqrt(L_days)
     z       = stats.norm.ppf(service_level)
     SS      = z * sigma_L
     S       = mu_L + SS
@@ -364,12 +373,15 @@ def solve_base_stock(
     Phi_z = stats.norm.cdf(z)
     L_z   = phi_z - z * (1.0 - Phi_z)   # standard normal loss function
 
-    E_B           = sigma_L * L_z
+    E_B           = sigma_L * L_z              # expected backorders per cycle (units)
     E_inv_precise = (S - mu_L) * Phi_z + sigma_L * phi_z
-    fill_rate   = max(0.0, 1.0 - E_B * D / D) if D > 0 else 1.0
-    # Type-II fill rate: 1 − E[B] / (demand per period)
-    # For annual: fill_rate = 1 − E_B/D  (E_B and D in same annual units)
-    fill_rate   = float(np.clip(1.0 - E_B / D, 0.0, 1.0)) if D > 0 else 1.0
+
+    # Type-II (fill-rate) service level.
+    # The standard expression for a base-stock policy with normal lead-time
+    # demand is:  beta = 1 - E[B per cycle] / E[demand per cycle]
+    # With a continuous-review base-stock policy the demand per cycle equals
+    # the lead-time demand mu_L (one cycle = one lead-time interval), so:
+    fill_rate = float(np.clip(1.0 - E_B / mu_L, 0.0, 1.0)) if mu_L > 0 else 1.0
     annual_hold = h * E_inv_precise
 
     return BaseStockResult(

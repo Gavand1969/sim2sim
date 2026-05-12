@@ -217,7 +217,8 @@ async def newsvendor_endpoint(body: NewsvendorRequest):
 async def reorder_point_endpoint(body: ReorderPointRequest):
     try:
         r = solve_reorder_point(
-            D=body.annual_demand, L=body.lead_time, sigma_d=body.demand_std_day,
+            D=body.annual_demand, L_days=body.lead_time_days,
+            sigma_d=body.demand_std_day,
             K=body.ordering_cost, c=body.unit_cost, i=body.holding_rate,
             service_level=body.service_level,
         )
@@ -239,7 +240,8 @@ async def reorder_point_endpoint(body: ReorderPointRequest):
 async def base_stock_endpoint(body: BaseStockRequest):
     try:
         r = solve_base_stock(
-            D=body.annual_demand, L=body.lead_time, sigma_d=body.demand_std_day,
+            D=body.annual_demand, L_days=body.lead_time_days,
+            sigma_d=body.demand_std_day,
             c=body.unit_cost, i=body.holding_rate, service_level=body.service_level,
         )
     except Exception:
