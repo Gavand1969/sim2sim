@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from src.api.middleware import limiter, add_security_headers
 from src.api.routes import router
@@ -42,8 +43,11 @@ app = FastAPI(
 )
 
 # ── Rate limiter ──────────────────────────────────────────────────────────────
+# SlowAPIMiddleware actually enforces default_limits on every request;
+# without it the exception handler is registered but never triggered.
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # In production the frontend is served from the same origin, so wildcard

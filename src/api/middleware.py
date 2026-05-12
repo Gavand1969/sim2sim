@@ -10,13 +10,31 @@ import os
 from fastapi import Request
 from fastapi.responses import Response
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 
-_rate = os.getenv("RATE_LIMIT_PER_MINUTE", "20")
+_rate = os.getenv("RATE_LIMIT_PER_MINUTE", "60")
+
+
+def _client_ip(request: Request) -> str:
+    """
+    Return the real client IP behind DigitalOcean's load balancer.
+
+    DO App Platform sets `X-Forwarded-For: <client>, <internal-proxy>`. We take
+    the first entry (the original client). Without this, slowapi keys on the
+    proxy IP and all users share one bucket -> everyone gets rate-limited at
+    once. Falls back to the direct peer if no XFF header is present.
+    """
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=_client_ip,
     default_limits=[f"{_rate}/minute"],
+    # /api/billing/status is polled by the SPA on every page load. We still
+    # rate-limit it but at a much higher per-IP threshold so legitimate use
+    # never trips the limiter, while abusive enumeration still gets blocked.
 )
 
 
