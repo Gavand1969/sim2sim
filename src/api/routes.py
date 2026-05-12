@@ -16,7 +16,7 @@ import asyncio
 import logging
 
 import anthropic
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from src.ai.explainer import explain
 from src.api.schemas import (
@@ -26,6 +26,7 @@ from src.api.schemas import (
     EOQRequest, EOQResponse,
     EPQRequest, EPQResponse,
     ExplainRequest, ExplainResponse,
+    ExportInventoryRequest, ExportLPRequest, ExportQueuingRequest,
     LPRequest, LPResponse,
     NewsvendorRequest, NewsvendorResponse,
     QueuingRequest, QueuingResponse,
@@ -33,6 +34,9 @@ from src.api.schemas import (
     ScenarioCompareRequest, ScenarioCompareResponse,
     SimulationRequest, SimulationResponse,
 )
+from src.billing.licenses import require_pro
+from src.export.excel import build_inventory_xlsx, build_lp_xlsx, build_queuing_xlsx
+from src.export.pdf import build_inventory_pdf, build_lp_pdf, build_queuing_pdf
 from src.models.inventory import (
     solve_base_stock, solve_eoq, solve_eoq_backorder,
     solve_epq, solve_newsvendor, solve_reorder_point,
@@ -352,6 +356,92 @@ async def cpm_endpoint(body: CPMRequest):
         critical_path=r.critical_path, project_duration=r.project_duration,
         project_variance=r.project_variance, project_std=r.project_std,
         tasks=r.tasks,
+    )
+
+
+# ── Pro: Exports ───────────────────────────────────────────────────────────────
+
+@router.post("/export/queuing/xlsx", tags=["exports"])
+async def export_queuing_xlsx(
+    body: ExportQueuingRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export queuing results as an Excel workbook (Pro)."""
+    content = build_queuing_xlsx(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-queuing.xlsx"'},
+    )
+
+
+@router.post("/export/queuing/pdf", tags=["exports"])
+async def export_queuing_pdf(
+    body: ExportQueuingRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export queuing results as a PDF report (Pro)."""
+    content = build_queuing_pdf(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-queuing.pdf"'},
+    )
+
+
+@router.post("/export/inventory/xlsx", tags=["exports"])
+async def export_inventory_xlsx(
+    body: ExportInventoryRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export inventory results as an Excel workbook (Pro)."""
+    content = build_inventory_xlsx(result=body.result, params=body.params, model_kind=body.model_kind)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-inventory.xlsx"'},
+    )
+
+
+@router.post("/export/inventory/pdf", tags=["exports"])
+async def export_inventory_pdf(
+    body: ExportInventoryRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export inventory results as a PDF report (Pro)."""
+    content = build_inventory_pdf(result=body.result, params=body.params, model_kind=body.model_kind)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-inventory.pdf"'},
+    )
+
+
+@router.post("/export/lp/xlsx", tags=["exports"])
+async def export_lp_xlsx(
+    body: ExportLPRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export LP optimization results as an Excel workbook (Pro)."""
+    content = build_lp_xlsx(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-lp.xlsx"'},
+    )
+
+
+@router.post("/export/lp/pdf", tags=["exports"])
+async def export_lp_pdf(
+    body: ExportLPRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export LP optimization results as a PDF report (Pro)."""
+    content = build_lp_pdf(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-lp.pdf"'},
     )
 
 

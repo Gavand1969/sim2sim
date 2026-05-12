@@ -338,6 +338,28 @@ class CPMResponse(BaseModel):
     tasks:             dict[str, Any]
 
 
+# ── Pro: Export request schemas ──────────────────────────────────────────────
+
+class ExportQueuingRequest(BaseModel):
+    params: dict = Field(..., description="Queuing request parameters")
+    result: dict = Field(..., description="Queuing result payload")
+
+
+class ExportInventoryRequest(BaseModel):
+    params: dict = Field(..., description="Inventory request parameters")
+    result: dict = Field(..., description="Inventory result payload")
+    model_kind: str = Field(
+        ...,
+        pattern="^(eoq|eoq_backorder|epq|newsvendor|reorder_point|base_stock)$",
+        description="Inventory model variant",
+    )
+
+
+class ExportLPRequest(BaseModel):
+    params: dict = Field(..., description="LP request parameters")
+    result: dict = Field(..., description="LP result payload")
+
+
 # ── AI Explanation ────────────────────────────────────────────────────────────
 
 class ExplainRequest(BaseModel):
