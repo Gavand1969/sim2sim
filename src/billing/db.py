@@ -194,6 +194,16 @@ def init_db() -> None:
     """Create tables if they don't exist.  Safe to call repeatedly."""
     with _LOCK:
         if _use_postgres():
+            # Diagnostic log — what user/db are we actually connected as?
+            try:
+                import psycopg  # type: ignore
+                with psycopg.connect(_database_url(), autocommit=True) as conn, conn.cursor() as cur:
+                    cur.execute("SELECT current_user, current_database(), session_user, current_schema()")
+                    row = cur.fetchone()
+                    print(f"[billing.db] PG identity: user={row[0]} db={row[1]} session_user={row[2]} schema={row[3]}", flush=True)
+            except Exception as _e:
+                print(f"[billing.db] PG identity probe failed: {_e}", flush=True)
+
             with _pg_connect() as conn, conn.cursor() as cur:
                 for stmt in _PG_SCHEMA_STATEMENTS:
                     cur.execute(stmt)
