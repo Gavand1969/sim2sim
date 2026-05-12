@@ -4,7 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 
-**Live demo:** *(coming soon — deployment in progress)*
+**Live demo:** *(coming soon — deployment in progress)*  
+**Pricing & launch guide:** see [LAUNCH.md](LAUNCH.md)
 
 PhD-level operations research in your browser — queuing theory, inventory optimization, Monte Carlo simulation, and linear programming with AI-generated insights powered by Claude.
 
