@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Activate your Sim2Sim Pro or Team license key." />
+  <title>Account — Sim2Sim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/billing.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <a href="/" class="brand" style="text-decoration:none;color:inherit;">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">Sim<span class="brand-accent">2</span>Sim</span>
+      <span class="brand-tag">Operations Research</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">App</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/account" class="nav-link" style="color:var(--accent);">Account</a>
+      <a href="https://github.com/Gavand1969/sim2sim" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="billing-main">
+  <section class="account-card">
+    <h1>Your license</h1>
+
+    <div id="status-block" class="status-block status-empty">
+      <p class="status-line"><strong>Status:</strong> <span id="status-tier">No license</span></p>
+      <p class="status-line"><strong>Email:</strong> <span id="status-email">—</span></p>
+      <p class="status-line"><strong>Activations:</strong> <span id="status-count">—</span></p>
+    </div>
+
+    <form id="activate-form" class="activate-form">
+      <label for="key-input">Paste your license key</label>
+      <input type="text" id="key-input" name="key"
+             placeholder="LIC-XXXX-XXXX-XXXX-XXXX"
+             autocomplete="off" spellcheck="false" />
+      <button type="submit" class="btn-primary">Activate</button>
+      <p id="activate-msg" class="activate-msg" role="status"></p>
+    </form>
+
+    <details class="account-help">
+      <summary>I don't have a key yet</summary>
+      <p>Head to the <a href="/pricing">Pricing page</a> to buy Pro or Team.
+         Your license key will be emailed to you immediately after checkout.</p>
+    </details>
+
+    <details class="account-help">
+      <summary>I lost my key</summary>
+      <p>Search your inbox for "Sim2Sim license". If you can't find it,
+         email <a href="mailto:gavanderson13@gmail.com">gavanderson13@gmail.com</a>
+         from the address you used at checkout.</p>
+    </details>
+
+    <button id="clear-license" class="link-danger">Sign out (remove key from this browser)</button>
+  </section>
+</main>
+
+<footer class="billing-footer">
+  <p><a href="/">← Back to app</a></p>
+</footer>
+
+<script src="/static/js/license.js" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const tierEl  = document.getElementById("status-tier");
+    const emailEl = document.getElementById("status-email");
+    const countEl = document.getElementById("status-count");
+    const block   = document.getElementById("status-block");
+    const form    = document.getElementById("activate-form");
+    const input   = document.getElementById("key-input");
+    const msgEl   = document.getElementById("activate-msg");
+    const clearBtn = document.getElementById("clear-license");
+
+    async function refresh() {
+      const status = await window.Sim2SimLicense.fetchStatus();
+      if (status.valid) {
+        tierEl.textContent = status.tier.toUpperCase();
+        emailEl.textContent = status.email || "—";
+        countEl.textContent = status.activation_count ?? "—";
+        block.className = "status-block status-active";
+      } else {
+        tierEl.textContent = "Free (no license)";
+        emailEl.textContent = "—";
+        countEl.textContent = "—";
+        block.className = "status-block status-empty";
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const key = input.value.trim();
+      if (!key) return;
+      msgEl.textContent = "Activating…";
+      msgEl.className = "activate-msg";
+      const result = await window.Sim2SimLicense.activate(key);
+      if (result.valid) {
+        msgEl.textContent = `Activated. Welcome to ${result.tier.toUpperCase()}.`;
+        msgEl.className = "activate-msg success";
+        input.value = "";
+        await refresh();
+      } else {
+        msgEl.textContent = result.message || "Invalid license key.";
+        msgEl.className = "activate-msg error";
+      }
+    });
+
+    clearBtn.addEventListener("click", async () => {
+      window.Sim2SimLicense.clear();
+      await refresh();
+      msgEl.textContent = "License removed from this browser.";
+      msgEl.className = "activate-msg";
+    });
+
+    await refresh();
+  });
+</script>
+</body>
+</html>

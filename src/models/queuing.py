@@ -42,6 +42,15 @@ class QueuingResult:
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
+def _little_law_residual(L: float, lam: float, W: float) -> float:
+    """Relative residual |L − λW| / max(|L|, 1).
+    Using a relative scale keeps the diagnostic meaningful at high
+    utilisation where L can be very large in absolute terms.
+    Values near 0 confirm Little's Law holds for this model.
+    """
+    return abs(L - lam * W) / max(abs(L), 1.0)
+
+
 def _erlang_c(c: int, a: float) -> float:
     """
     Erlang-C probability C(c, a) = P(arriving customer must wait).
@@ -89,7 +98,7 @@ def solve_mm1(lam: float, mu: float) -> QueuingResult:
     return QueuingResult(
         model="M/M/1", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=1.0 - rho, P_wait=None, prob_dist=_mm1_prob_dist(rho),
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
     )
 
 
@@ -110,7 +119,7 @@ def solve_mmc(lam: float, mu: float, c: int) -> QueuingResult:
     return QueuingResult(
         model=f"M/M/{c}", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=P0, P_wait=ec, prob_dist=_mmc_prob_dist(c, a, P0),
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
     )
 
 
@@ -126,7 +135,7 @@ def solve_md1(lam: float, mu: float) -> QueuingResult:
     return QueuingResult(
         model="M/D/1", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=1.0 - rho, P_wait=None, prob_dist=_mm1_prob_dist(rho),
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
     )
 
 
@@ -146,7 +155,7 @@ def solve_mg1(lam: float, mu: float, cs_sq: float) -> QueuingResult:
     return QueuingResult(
         model=f"M/G/1 (Cs²={cs_sq:.2f})", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=1.0 - rho, P_wait=None, prob_dist=_mm1_prob_dist(rho),
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
     )
 
 
@@ -192,7 +201,7 @@ def solve_mmck(lam: float, mu: float, c: int, K: int) -> QueuingResult:
     return QueuingResult(
         model=f"M/M/{c}/{K}", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=P0, P_wait=None, prob_dist=prob_dist,
-        little_law_check=abs(L - lam_eff * W),
+        little_law_check=_little_law_residual(L, lam_eff, W),
         blocking_prob=P_K, effective_lam=lam_eff,
     )
 
@@ -229,7 +238,7 @@ def solve_mm1k(lam: float, mu: float, K: int) -> QueuingResult:
     return QueuingResult(
         model=f"M/M/1/{K}", utilization=util, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=P0, P_wait=None, prob_dist=prob_dist,
-        little_law_check=abs(L - lam_eff * W),
+        little_law_check=_little_law_residual(L, lam_eff, W),
         blocking_prob=P_K, effective_lam=lam_eff,
     )
 
@@ -258,7 +267,7 @@ def solve_mminf(lam: float, mu: float) -> QueuingResult:
     return QueuingResult(
         model="M/M/∞", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=P0, P_wait=0.0, prob_dist=prob_dist,
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
         notes="No queuing: every customer finds a free server immediately.",
     )
 
@@ -289,7 +298,7 @@ def solve_gg1(lam: float, mu: float, ca_sq: float, cs_sq: float) -> QueuingResul
         model=f"G/G/1 (Ca²={ca_sq:.2f}, Cs²={cs_sq:.2f})",
         utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=1.0 - rho, P_wait=None, prob_dist=_mm1_prob_dist(rho),
-        little_law_check=abs(L - lam * W),
+        little_law_check=_little_law_residual(L, lam, W),
         notes="Kingman heavy-traffic approximation. Most accurate when ρ > 0.7.",
     )
 
@@ -322,7 +331,7 @@ def solve_bulk_mm1(lam: float, mu: float, batch_size: int) -> QueuingResult:
     return QueuingResult(
         model=f"M[{b}]/M/1", utilization=rho, L=L, Lq=Lq, W=W, Wq=Wq,
         P0=1.0 - rho, P_wait=None, prob_dist=_mm1_prob_dist(rho),
-        little_law_check=abs(L - lam_ind * W),
+        little_law_check=_little_law_residual(L, lam_ind, W),
         notes=f"Batches of {b} arrive at rate λ={lam}. "
               f"Individual arrival rate = {lam_ind:.2f}.",
     )

@@ -26,8 +26,24 @@ import anthropic
 _MODEL     = "claude-haiku-4-5-20251001"
 _MAX_TOKENS = 700
 
+# Module-level lazy-initialised client.  Created on first use so module import
+# never depends on ANTHROPIC_API_KEY being set (tests stay key-free).
+_client: anthropic.AsyncAnthropic | None = None
+
+
+def _get_client() -> anthropic.AsyncAnthropic:
+    global _client
+    if _client is None:
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise EnvironmentError(
+                "ANTHROPIC_API_KEY is not configured. Add it to your .env file."
+            )
+        _client = anthropic.AsyncAnthropic(api_key=api_key)
+    return _client
+
 _SYSTEM_PROMPT = """\
-You are a PhD-level operations research expert embedded in Sim2Real, \
+You are a PhD-level operations research expert embedded in Sim2Sim, \
 a professional OR platform. You explain quantitative results to engineers, \
 analysts, and students.
 
@@ -89,13 +105,7 @@ async def explain(
     EnvironmentError      if ANTHROPIC_API_KEY is not set.
     anthropic.APIError    on API-level failures (caller handles).
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        raise EnvironmentError(
-            "ANTHROPIC_API_KEY is not configured. Add it to your .env file."
-        )
-
-    client       = anthropic.AsyncAnthropic(api_key=api_key)
+    client       = _get_client()
     user_message = _build_user_message(model_type, parameters, results)
 
     message = await client.messages.create(

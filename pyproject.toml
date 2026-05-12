@@ -1,0 +1,44 @@
+[project]
+name = "sim2sim"
+version = "1.0.0"
+description = "PhD-level Operations Research platform — queuing, inventory, simulation, LP, with AI insights."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Gavin Anderson" }]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["static/**"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # bugbear
+  "UP",  # pyupgrade
+  "SIM", # simplify
+]
+ignore = [
+  "E501",  # line too long (we already format thoughtfully)
+  "E731",  # lambda assignment is fine
+  "B008",  # default arg call (FastAPI uses this)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011", "F401"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["static/", "build/", "dist/"]

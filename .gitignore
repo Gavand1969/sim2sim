@@ -9,3 +9,9 @@ venv/
 dist/
 build/
 .DS_Store
+
+# Billing DB (created at runtime — never commit)
+sim2sim.db
+sim2sim.db-journal
+sim2sim.db-wal
+sim2sim.db-shm

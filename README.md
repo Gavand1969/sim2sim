@@ -1,14 +1,17 @@
-# Sim2Real — Operations Research Platform
+# Sim2Sim — Operations Research Platform
 
 [![Tests](https://github.com/Gavand1969/sim2sim/actions/workflows/ci.yml/badge.svg)](https://github.com/Gavand1969/sim2sim/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 
-**Live demo:** *(deploy on Replit and paste URL here)*
+**Live demo:** *(coming soon — deployment in progress)*  
+**Pricing & launch guide:** see [LAUNCH.md](LAUNCH.md)
 
 PhD-level operations research in your browser — queuing theory, inventory optimization, Monte Carlo simulation, and linear programming with AI-generated insights powered by Claude.
 
-Arena costs $5,000/year. AnyLogic costs $7,000/year. **This is free.**
+Arena costs $5,000/year. AnyLogic costs $7,000/year. Sim2Sim is free to use and has an optional one-time **Pro** ($49) or **Team** ($249) upgrade for Excel/PDF export, unlimited AI explanations, advanced inventory models, and commercial-use rights. See [Pricing](static/pricing.html) and [LAUNCH.md](LAUNCH.md) for deployment.
+
+![Sim2Sim Screenshot](docs/screenshot.png)
 
 ---
 

@@ -16,7 +16,7 @@ import asyncio
 import logging
 
 import anthropic
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 
 from src.ai.explainer import explain
 from src.api.schemas import (
@@ -26,6 +26,7 @@ from src.api.schemas import (
     EOQRequest, EOQResponse,
     EPQRequest, EPQResponse,
     ExplainRequest, ExplainResponse,
+    ExportInventoryRequest, ExportLPRequest, ExportQueuingRequest,
     LPRequest, LPResponse,
     NewsvendorRequest, NewsvendorResponse,
     QueuingRequest, QueuingResponse,
@@ -33,6 +34,14 @@ from src.api.schemas import (
     ScenarioCompareRequest, ScenarioCompareResponse,
     SimulationRequest, SimulationResponse,
 )
+from src.billing import licenses as billing_licenses
+from src.billing.licenses import require_pro
+from src.billing.schemas import (
+    ActivateRequest, ActivateResponse, LicenseStatusResponse, WebhookAck,
+)
+from src.billing.webhook import handle_stripe_webhook
+from src.export.excel import build_inventory_xlsx, build_lp_xlsx, build_queuing_xlsx
+from src.export.pdf import build_inventory_pdf, build_lp_pdf, build_queuing_pdf
 from src.models.inventory import (
     solve_base_stock, solve_eoq, solve_eoq_backorder,
     solve_epq, solve_newsvendor, solve_reorder_point,
@@ -217,7 +226,8 @@ async def newsvendor_endpoint(body: NewsvendorRequest):
 async def reorder_point_endpoint(body: ReorderPointRequest):
     try:
         r = solve_reorder_point(
-            D=body.annual_demand, L=body.lead_time, sigma_d=body.demand_std_day,
+            D=body.annual_demand, L_days=body.lead_time_days,
+            sigma_d=body.demand_std_day,
             K=body.ordering_cost, c=body.unit_cost, i=body.holding_rate,
             service_level=body.service_level,
         )
@@ -239,7 +249,8 @@ async def reorder_point_endpoint(body: ReorderPointRequest):
 async def base_stock_endpoint(body: BaseStockRequest):
     try:
         r = solve_base_stock(
-            D=body.annual_demand, L=body.lead_time, sigma_d=body.demand_std_day,
+            D=body.annual_demand, L_days=body.lead_time_days,
+            sigma_d=body.demand_std_day,
             c=body.unit_cost, i=body.holding_rate, service_level=body.service_level,
         )
     except Exception:
@@ -351,6 +362,130 @@ async def cpm_endpoint(body: CPMRequest):
         project_variance=r.project_variance, project_std=r.project_std,
         tasks=r.tasks,
     )
+
+
+# ── Pro: Exports ───────────────────────────────────────────────────────────────
+
+@router.post("/export/queuing/xlsx", tags=["exports"])
+async def export_queuing_xlsx(
+    body: ExportQueuingRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export queuing results as an Excel workbook (Pro)."""
+    content = build_queuing_xlsx(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-queuing.xlsx"'},
+    )
+
+
+@router.post("/export/queuing/pdf", tags=["exports"])
+async def export_queuing_pdf(
+    body: ExportQueuingRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export queuing results as a PDF report (Pro)."""
+    content = build_queuing_pdf(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-queuing.pdf"'},
+    )
+
+
+@router.post("/export/inventory/xlsx", tags=["exports"])
+async def export_inventory_xlsx(
+    body: ExportInventoryRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export inventory results as an Excel workbook (Pro)."""
+    content = build_inventory_xlsx(result=body.result, params=body.params, model_kind=body.model_kind)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-inventory.xlsx"'},
+    )
+
+
+@router.post("/export/inventory/pdf", tags=["exports"])
+async def export_inventory_pdf(
+    body: ExportInventoryRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export inventory results as a PDF report (Pro)."""
+    content = build_inventory_pdf(result=body.result, params=body.params, model_kind=body.model_kind)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-inventory.pdf"'},
+    )
+
+
+@router.post("/export/lp/xlsx", tags=["exports"])
+async def export_lp_xlsx(
+    body: ExportLPRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export LP optimization results as an Excel workbook (Pro)."""
+    content = build_lp_xlsx(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-lp.xlsx"'},
+    )
+
+
+@router.post("/export/lp/pdf", tags=["exports"])
+async def export_lp_pdf(
+    body: ExportLPRequest,
+    _license: str = Depends(require_pro),
+) -> Response:
+    """Export LP optimization results as a PDF report (Pro)."""
+    content = build_lp_pdf(result=body.result, params=body.params)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sim2sim-lp.pdf"'},
+    )
+
+
+# ── Billing: license activation + Stripe webhook ──────────────────────────────
+
+@router.post("/billing/activate", response_model=ActivateResponse, tags=["billing"])
+async def billing_activate(body: ActivateRequest):
+    """
+    Activate a license key.  Returns tier/email and bumps the activation
+    counter on the server.  Idempotent — a key can be activated repeatedly.
+    """
+    info = billing_licenses.activate_license(body.key)
+    if info is None:
+        return ActivateResponse(valid=False, message="Invalid or unknown license key.")
+    return ActivateResponse(
+        valid=True, tier=info.tier, email=info.email,
+        activated_at=info.activated_at,
+    )
+
+
+@router.get("/billing/status", response_model=LicenseStatusResponse, tags=["billing"])
+async def billing_status(x_license_key: str = Header(default="")):
+    """
+    Check current license status without recording an activation.  The
+    frontend calls this on page load to decide whether to show Pro UI.
+    """
+    info = billing_licenses.validate_license(x_license_key)
+    if info is None:
+        return LicenseStatusResponse(valid=False, message="No valid license key.")
+    return LicenseStatusResponse(
+        valid=True, tier=info.tier, email=info.email,
+        activation_count=info.activation_count,
+    )
+
+
+@router.post("/billing/webhook", response_model=WebhookAck, tags=["billing"])
+async def billing_webhook(request: Request):
+    """Stripe webhook receiver — see src/billing/webhook.py for details."""
+    return await handle_stripe_webhook(request)
 
 
 # ── AI Explanation ────────────────────────────────────────────────────────────

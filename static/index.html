@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sim2Real — PhD-level Operations Research platform with AI explanations. Queuing, inventory, simulation, and optimization — free in your browser." />
-  <title>Sim2Real | Operations Research Platform</title>
+  <meta name="description" content="Sim2Sim — PhD-level Operations Research platform with AI explanations. Queuing, inventory, simulation, and optimization — free in your browser." />
+  <title>Sim2Sim | Operations Research Platform</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,9 +22,12 @@
 
   <!-- App -->
   <link rel="stylesheet" href="/static/css/style.css" />
-  <script src="/static/js/api.js"    defer></script>
-  <script src="/static/js/charts.js" defer></script>
-  <script src="/static/js/app.js"    defer></script>
+  <link rel="stylesheet" href="/static/css/billing.css" />
+  <script src="/static/js/api.js"     defer></script>
+  <script src="/static/js/charts.js"  defer></script>
+  <script src="/static/js/license.js" defer></script>
+  <script src="/static/js/app.js"     defer></script>
+  <script src="/static/js/exports.js" defer></script>
 </head>
 <body>
 
@@ -33,10 +36,12 @@
   <div class="header-inner">
     <div class="brand">
       <span class="brand-icon">⬡</span>
-      <span class="brand-name">Sim<span class="brand-accent">2</span>Real</span>
+      <span class="brand-name">Sim<span class="brand-accent">2</span>Sim</span>
       <span class="brand-tag">Operations Research</span>
     </div>
     <nav class="header-nav">
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/account" class="nav-link">Account<span id="tier-pill" class="tier-pill free">Free</span></a>
       <a href="/api/docs" target="_blank" rel="noopener" class="nav-link">API Docs</a>
       <a href="https://github.com/Gavand1969/sim2sim" target="_blank" rel="noopener" class="nav-link">GitHub</a>
     </nav>
@@ -237,8 +242,8 @@
           <label class="field-label" for="rp-demand">Annual Demand (D) <span class="unit">units/year</span></label>
           <input id="rp-demand" type="number" class="field-input" value="10000" min="1" max="10000000" step="1" />
 
-          <label class="field-label" for="rp-lead">Lead Time (L) <span class="unit">years (e.g. 0.05 = ~18 days)</span></label>
-          <input id="rp-lead" type="number" class="field-input" value="0.05" min="0.001" max="5" step="0.001" />
+          <label class="field-label" for="rp-lead">Lead Time (L) <span class="unit">days</span></label>
+          <input id="rp-lead" type="number" class="field-input" value="18" min="0.1" max="730" step="0.5" />
 
           <label class="field-label" for="rp-sigma">Daily Demand Std Dev (σ_d)</label>
           <input id="rp-sigma" type="number" class="field-input" value="10" min="0" max="100000" step="0.1" />

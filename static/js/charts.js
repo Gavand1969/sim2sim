@@ -1,5 +1,5 @@
 /**
- * Chart.js helpers for Sim2Real.
+ * Chart.js helpers for Sim2Sim.
  * All charts use the same dark-theme defaults derived from CSS variables.
  */
 

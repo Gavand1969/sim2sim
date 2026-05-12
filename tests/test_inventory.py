@@ -3,7 +3,12 @@ Unit tests for EOQ and Newsvendor inventory models.
 """
 import math
 import pytest
-from src.models.inventory import solve_eoq, solve_newsvendor
+from src.models.inventory import (
+    solve_base_stock,
+    solve_eoq,
+    solve_newsvendor,
+    solve_reorder_point,
+)
 
 
 class TestEOQ:
@@ -117,3 +122,60 @@ class TestNewsvendor:
     def test_invalid_salvage_exceeds_cost(self):
         with pytest.raises(ValueError, match="unit_cost must be greater than salvage_value"):
             solve_newsvendor(p=100, c=40, s=50, demand_mean=100, demand_std=20)
+
+
+class TestReorderPoint:
+    """(Q, r) continuous-review inventory model."""
+
+    def test_basic_correctness(self):
+        """r = D_day · L_days + z · sigma_d · sqrt(L_days)."""
+        D, L, sigma_d = 10_000, 18.0, 10.0
+        r = solve_reorder_point(D=D, L_days=L, sigma_d=sigma_d,
+                                 K=200, c=50, i=0.25, service_level=0.95)
+        D_day = D / 365.0
+        expected_mu_L  = D_day * L
+        expected_sigma = sigma_d * math.sqrt(L)
+        assert r.demand_lead_time == pytest.approx(expected_mu_L, rel=1e-4)
+        assert r.std_lead_time    == pytest.approx(expected_sigma, rel=1e-4)
+
+    def test_higher_service_level_means_more_safety_stock(self):
+        common = dict(D=10_000, L_days=18.0, sigma_d=10.0, K=200, c=50, i=0.25)
+        r_95 = solve_reorder_point(service_level=0.95, **common)
+        r_99 = solve_reorder_point(service_level=0.99, **common)
+        assert r_99.safety_stock > r_95.safety_stock
+        assert r_99.reorder_point > r_95.reorder_point
+
+    def test_zero_variability_means_zero_safety_stock(self):
+        r = solve_reorder_point(D=10_000, L_days=18.0, sigma_d=0.0,
+                                 K=200, c=50, i=0.25, service_level=0.95)
+        assert r.safety_stock == pytest.approx(0.0, abs=1e-9)
+
+
+class TestBaseStock:
+    """Base-stock (order-up-to) inventory model."""
+
+    def test_basic_correctness(self):
+        D, L, sigma_d = 10_000, 18.0, 10.0
+        r = solve_base_stock(D=D, L_days=L, sigma_d=sigma_d, c=50, i=0.25,
+                              service_level=0.95)
+        D_day = D / 365.0
+        assert r.demand_lead_time == pytest.approx(D_day * L, rel=1e-4)
+        assert r.std_lead_time    == pytest.approx(sigma_d * math.sqrt(L), rel=1e-4)
+
+    def test_fill_rate_in_unit_interval(self):
+        """Type-II fill rate must always be in [0, 1]."""
+        r = solve_base_stock(D=10_000, L_days=18.0, sigma_d=10.0, c=50, i=0.25,
+                              service_level=0.95)
+        assert 0.0 <= r.fill_rate <= 1.0
+
+    def test_fill_rate_increases_with_service_level(self):
+        common = dict(D=10_000, L_days=18.0, sigma_d=10.0, c=50, i=0.25)
+        r_90 = solve_base_stock(service_level=0.90, **common)
+        r_99 = solve_base_stock(service_level=0.99, **common)
+        assert r_99.fill_rate > r_90.fill_rate
+
+    def test_no_variability_zero_backorders(self):
+        r = solve_base_stock(D=10_000, L_days=18.0, sigma_d=0.0, c=50, i=0.25,
+                              service_level=0.95)
+        assert r.expected_backorders == pytest.approx(0.0, abs=1e-9)
+        assert r.fill_rate == pytest.approx(1.0, abs=1e-9)

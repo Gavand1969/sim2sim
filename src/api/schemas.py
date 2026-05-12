@@ -195,8 +195,8 @@ class NewsvendorResponse(BaseModel):
 
 class ReorderPointRequest(BaseModel):
     annual_demand:  float = Field(..., gt=0, le=10_000_000, description="D: annual demand (units/year)")
-    lead_time:      float = Field(..., gt=0, le=5,          description="L: replenishment lead time (years)")
-    demand_std_day: float = Field(..., ge=0, le=100_000,    description="σ_d: std dev of daily demand")
+    lead_time_days: float = Field(..., gt=0, le=730,        description="L: replenishment lead time, in DAYS (max 730 = 2 years)")
+    demand_std_day: float = Field(..., ge=0, le=100_000,    description="σ_d: std dev of DAILY demand (must match lead-time unit)")
     ordering_cost:  float = Field(..., gt=0, le=1_000_000)
     unit_cost:      float = Field(..., gt=0, le=100_000)
     holding_rate:   float = Field(..., gt=0, le=1)
@@ -219,9 +219,9 @@ class ReorderPointResponse(BaseModel):
 # ── Inventory: Base Stock ─────────────────────────────────────────────────────
 
 class BaseStockRequest(BaseModel):
-    annual_demand:  float = Field(..., gt=0, le=10_000_000)
-    lead_time:      float = Field(..., gt=0, le=5)
-    demand_std_day: float = Field(..., ge=0, le=100_000)
+    annual_demand:  float = Field(..., gt=0, le=10_000_000, description="D: annual demand (units/year)")
+    lead_time_days: float = Field(..., gt=0, le=730,        description="L: replenishment lead time, in DAYS")
+    demand_std_day: float = Field(..., ge=0, le=100_000,    description="σ_d: std dev of DAILY demand")
     unit_cost:      float = Field(..., gt=0, le=100_000)
     holding_rate:   float = Field(..., gt=0, le=1)
     service_level:  float = Field(0.95, gt=0, lt=1)
@@ -336,6 +336,28 @@ class CPMResponse(BaseModel):
     project_variance:  float
     project_std:       float
     tasks:             dict[str, Any]
+
+
+# ── Pro: Export request schemas ──────────────────────────────────────────────
+
+class ExportQueuingRequest(BaseModel):
+    params: dict = Field(..., description="Queuing request parameters")
+    result: dict = Field(..., description="Queuing result payload")
+
+
+class ExportInventoryRequest(BaseModel):
+    params: dict = Field(..., description="Inventory request parameters")
+    result: dict = Field(..., description="Inventory result payload")
+    model_kind: str = Field(
+        ...,
+        pattern="^(eoq|eoq_backorder|epq|newsvendor|reorder_point|base_stock)$",
+        description="Inventory model variant",
+    )
+
+
+class ExportLPRequest(BaseModel):
+    params: dict = Field(..., description="LP request parameters")
+    result: dict = Field(..., description="LP result payload")
 
 
 # ── AI Explanation ────────────────────────────────────────────────────────────

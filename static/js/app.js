@@ -172,6 +172,10 @@ async function handleQueuing() {
   try {
     const data = await SimAPI.analyseQueue(params);
     renderQueuingResults(data, params, 'results-queuing');
+    if (window.Sim2SimExports) window.Sim2SimExports.attach({
+      kind: 'queuing', result: data, params,
+      container: document.getElementById('results-queuing'),
+    });
     triggerExplanation('Queuing (' + data.model + ')', params, summariseQueuing(data));
   } catch(e) { showToast(e.detail ?? e.message, 'error'); }
   finally    { setLoading(btn, false); }
@@ -417,6 +421,10 @@ async function handleEOQ() {
   };
   const data = await SimAPI.analyseEOQ(params);
   renderEOQResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'eoq', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('EOQ', params, { eoq: data.eoq, orders_per_year: data.orders_per_year,
     cycle_time_days: data.cycle_time_days, total_annual_cost: data.total_annual_cost });
 }
@@ -431,6 +439,10 @@ async function handleEOQBackorder() {
   };
   const data = await SimAPI.post('/inventory/eoq-backorder', params);
   renderEOQBackorderResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'eoq_backorder', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('EOQ with Backorders', params, data);
 }
 
@@ -444,6 +456,10 @@ async function handleEPQ() {
   };
   const data = await SimAPI.post('/inventory/epq', params);
   renderEPQResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'epq', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('EPQ', params, data);
 }
 
@@ -458,6 +474,10 @@ async function handleNewsvendor() {
   };
   const data = await SimAPI.analyseNewsvendor(params);
   renderNewsvendorResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'newsvendor', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('Newsvendor', params, { critical_ratio: data.critical_ratio,
     optimal_quantity: data.optimal_quantity, expected_profit: data.expected_profit,
     fill_rate: data.fill_rate });
@@ -466,7 +486,7 @@ async function handleNewsvendor() {
 async function handleReorderPoint() {
   const params = {
     annual_demand:  parseFloat(document.getElementById('rp-demand').value),
-    lead_time:      parseFloat(document.getElementById('rp-lead').value),
+    lead_time_days: parseFloat(document.getElementById('rp-lead').value),
     demand_std_day: parseFloat(document.getElementById('rp-sigma').value),
     ordering_cost:  parseFloat(document.getElementById('rp-k').value),
     unit_cost:      parseFloat(document.getElementById('rp-c').value),
@@ -475,13 +495,17 @@ async function handleReorderPoint() {
   };
   const data = await SimAPI.post('/inventory/reorder-point', params);
   renderReorderPointResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'reorder_point', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('Reorder Point (Q,r) Policy', params, data);
 }
 
 async function handleBaseStock() {
   const params = {
     annual_demand:  parseFloat(document.getElementById('rp-demand').value),
-    lead_time:      parseFloat(document.getElementById('rp-lead').value),
+    lead_time_days: parseFloat(document.getElementById('rp-lead').value),
     demand_std_day: parseFloat(document.getElementById('rp-sigma').value),
     unit_cost:      parseFloat(document.getElementById('rp-c').value),
     holding_rate:   parseFloat(document.getElementById('rp-i').value),
@@ -489,6 +513,10 @@ async function handleBaseStock() {
   };
   const data = await SimAPI.post('/inventory/base-stock', params);
   renderBaseStockResults(data);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'inventory', modelKind: 'base_stock', result: data, params,
+    container: document.getElementById('results-inventory'),
+  });
   triggerExplanation('Base Stock Policy', params, data);
 }
 
@@ -717,6 +745,11 @@ async function handleLP() {
   const params = { objective, c_obj, A_ub, b_ub, variable_names, constraint_names };
   const data = await SimAPI.post('/optimize/lp', params);
   renderLPResults(data, variable_names, constraint_names, c_obj, objective);
+  if (window.Sim2SimExports) window.Sim2SimExports.attach({
+    kind: 'lp', result: data,
+    params: { c_obj, A_ub, b_ub, variable_names, constraint_names, objective },
+    container: document.getElementById('results-optimization'),
+  });
   triggerExplanation('Linear Programming', params, {
     status: data.status, optimal_value: data.optimal_value,
     variables: data.variables, shadow_prices: data.shadow_prices,
