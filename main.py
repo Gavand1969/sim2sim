@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -33,7 +33,10 @@ app = FastAPI(
     title="Sim2Sim",
     description="Operations Research Simulator with AI-powered explanations",
     version="1.0.0",
-    docs_url="/api/docs",
+    # We serve our own /api/docs below so the bootstrap script can live in
+    # an external file and clear our strict CSP (no inline scripts).  The
+    # OpenAPI schema is still auto-generated at /openapi.json.
+    docs_url=None,
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
@@ -91,6 +94,31 @@ async def serve_pricing():
 @app.get("/account", include_in_schema=False)
 async def serve_account():
     return FileResponse("static/account.html")
+
+
+# Custom Swagger UI — keeps the bootstrap script in /static/js/ so our CSP
+# (script-src 'self' https://cdn.jsdelivr.net) does not block it.
+_SWAGGER_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sim2Sim API · Swagger UI</title>
+  <link rel="shortcut icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="/static/js/swagger-init.js"></script>
+</body>
+</html>
+"""
+
+
+@app.get("/api/docs", include_in_schema=False)
+async def serve_api_docs():
+    return HTMLResponse(_SWAGGER_HTML)
 
 
 # Catch-all so that client-side navigation always returns index.html
