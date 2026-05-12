@@ -37,7 +37,7 @@ app = FastAPI(
     # an external file and clear our strict CSP (no inline scripts).  The
     # OpenAPI schema is still auto-generated at /openapi.json.
     docs_url=None,
-    redoc_url="/api/redoc",
+    redoc_url=None,  # ReDoc is redundant with our custom Swagger UI at /api/docs
     lifespan=lifespan,
 )
 
