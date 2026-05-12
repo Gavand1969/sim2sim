@@ -466,7 +466,7 @@ async function handleNewsvendor() {
 async function handleReorderPoint() {
   const params = {
     annual_demand:  parseFloat(document.getElementById('rp-demand').value),
-    lead_time:      parseFloat(document.getElementById('rp-lead').value),
+    lead_time_days: parseFloat(document.getElementById('rp-lead').value),
     demand_std_day: parseFloat(document.getElementById('rp-sigma').value),
     ordering_cost:  parseFloat(document.getElementById('rp-k').value),
     unit_cost:      parseFloat(document.getElementById('rp-c').value),
@@ -481,7 +481,7 @@ async function handleReorderPoint() {
 async function handleBaseStock() {
   const params = {
     annual_demand:  parseFloat(document.getElementById('rp-demand').value),
-    lead_time:      parseFloat(document.getElementById('rp-lead').value),
+    lead_time_days: parseFloat(document.getElementById('rp-lead').value),
     demand_std_day: parseFloat(document.getElementById('rp-sigma').value),
     unit_cost:      parseFloat(document.getElementById('rp-c').value),
     holding_rate:   parseFloat(document.getElementById('rp-i').value),

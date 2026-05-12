@@ -63,8 +63,9 @@ def _run_single_replication(
     we can compute each customer's arrival, queue-entry, and departure
     analytically without maintaining a full event heap.
     """
-    # Burn-in: discard first 10% of customers to reach steady state
-    n_warmup    = max(1, n_customers // 10)
+    # Burn-in: discard first 20% of customers (or at least 100) to reach
+    # steady state.  10% was too aggressive for ρ > 0.8 systems.
+    n_warmup    = max(100, n_customers // 5)
     n_total     = n_customers + n_warmup
 
     server_free = np.zeros(c)   # time each server becomes free
@@ -73,7 +74,7 @@ def _run_single_replication(
     wait_times  = []            # Wq per customer (post warmup)
     sojourn     = []            # W per customer (post warmup)
     busy_total  = 0.0           # total server-busy time (post warmup)
-    sim_start   = None          # clock at end of warmup
+    sim_start   = None          # clock at start of measurement window
 
     for k in range(n_total):
         # Inter-arrival: Exponential(lam)
@@ -95,8 +96,9 @@ def _run_single_replication(
         wq = start_svc - arrival   # wait in queue
         w  = depart    - arrival   # sojourn time
 
-        if k == n_warmup - 1:
-            # Mark steady-state clock start and reset server busyness
+        if k == n_warmup:
+            # First post-warmup customer: this arrival starts the
+            # measurement window for utilisation accounting.
             sim_start  = arrival
             busy_total = 0.0
 

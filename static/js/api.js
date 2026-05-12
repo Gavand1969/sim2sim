@@ -1,5 +1,5 @@
 /**
- * Sim2Real API client — thin wrapper around fetch().
+ * Sim2Sim API client — thin wrapper around fetch().
  *
  * Security notes:
  *  - All requests go to the same origin (/api/*) — no cross-origin calls.
